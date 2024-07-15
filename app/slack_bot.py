@@ -3,6 +3,7 @@ import os
 from app.services.travel.travel_planner import TravelPlanner
 import traceback
 from utils.logger import logger
+from app.openai_client import OpenAIClient
 
 def initialize_slack_app(prompt_generator, travel_planner, task_manager, document_searcher):
     # Initialize the Slack app
@@ -11,10 +12,15 @@ def initialize_slack_app(prompt_generator, travel_planner, task_manager, documen
         signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
     )
 
+    openai_client = OpenAIClient()
+
     @app.event("app_mention")
     def handle_mentions(event, say):
         text = event["text"].lower()
         user = event["user"]
+
+        initial_response = openai_client.generate_text(f"Generate a short and efficient response for the following request: {text}")
+        say(initial_response)
 
         if "schedule" in text:
             response = "Schedule a meeting"
@@ -43,12 +49,16 @@ def initialize_slack_app(prompt_generator, travel_planner, task_manager, documen
     @app.command("/schedule")
     def handle_schedule_command(ack, respond, command):
         ack()
+        initial_response = openai_client.generate_text(f"Generate a short and efficient response for a scheduling request: {command['text']}")
+        respond(initial_response)
         response = "Schedule a meeting"
         respond(response)
 
     @app.command("/family")
     def handle_family_command(ack, respond, command):
         ack()
+        initial_response = openai_client.generate_text(f"Generate a short and efficient response for a family-related request: {command['text']}")
+        respond(initial_response)
         user_info = {"name": "John Doe", "relationship": "brother", "last_contact": "2023-01-01", "interests": ["hiking", "reading"], "recent_events": ["got a new job"]}
         response = prompt_generator.generate_prompt(user_info["name"], user_info["relationship"], user_info["last_contact"], user_info["interests"], user_info["recent_events"])
         respond(response)
@@ -56,6 +66,8 @@ def initialize_slack_app(prompt_generator, travel_planner, task_manager, documen
     @app.command("/travel")
     def handle_travel_command(ack, respond, command):
         ack()
+        initial_response = openai_client.generate_text(f"Generate a short and efficient response for a travel request: {command['text']}")
+        respond(initial_response)
         try:
             travel_request = travel_planner.parse_travel_request(command["text"])
             if "error" in travel_request:
@@ -72,12 +84,16 @@ def initialize_slack_app(prompt_generator, travel_planner, task_manager, documen
     @app.command("/todo")
     def handle_todo_command(ack, respond, command):
         ack()
+        initial_response = openai_client.generate_text(f"Generate a short and efficient response for a todo request: {command['text']}")
+        respond(initial_response)
         response = task_manager.handle_todo_request(command["text"])
         respond(response)
 
     @app.command("/document")
     def handle_document_command(ack, respond, command):
         ack()
+        initial_response = openai_client.generate_text(f"Generate a short and efficient response for a document search request: {command['text']}")
+        respond(initial_response)
         response = document_searcher.search_documents(command["text"])
         respond(response)
 

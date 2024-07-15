@@ -138,3 +138,6 @@ The project uses a custom logger to track events and errors. Logs are stored in 
 ## License
 
 This project is licensed under the MIT License.
+
+
+WHEN NEW USER ASK FOR ALL OF THEIR PREFERENCES
