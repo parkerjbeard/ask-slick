@@ -1,0 +1,10 @@
+slack_bolt==1.8.1
+slack_sdk==3.12.2
+openai==0.27.0
+requests==2.26.0
+google-auth==1.35.0
+google-auth-oauthlib==0.4.6
+google-api-python-client==2.26.1
+python-dotenv==0.19.2
+sqlalchemy==1.4.27
+unittest2==1.1.0

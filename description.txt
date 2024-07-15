@@ -1,0 +1,88 @@
+Project: AI-Powered Personal Assistant Slack Bot
+
+Overview:
+This project involves developing a sophisticated Slack bot that serves as an AI-powered personal assistant for a busy professional. The bot integrates various APIs and services to provide a wide range of functionalities, all accessible through natural language interactions in Slack.
+
+Key Features:
+1. Calendar Management: Schedules meetings, finds open time slots, and sends coordination emails.
+2. Family Communication Assistant: Prompts and helps maintain regular contact with family members.
+3. Travel Planning: Parses travel requests and searches for suitable flights and accommodations.
+4. Task Management: Maintains a running to-do list and provides daily schedule updates.
+5. Document Retrieval: Searches and retrieves relevant documents from Google Drive based on content queries.
+
+Technical Stack:
+- Backend: Python
+- Slack API: For bot interactions and command handling
+- OpenAI API: For natural language processing and generation
+- Google APIs: For calendar, email, and document management
+- Database: For storing user preferences, family information, and document metadata
+
+Key Components:
+1. Slack Bot (slack_bot.py): Handles all Slack interactions and routes requests to appropriate services.
+2. OpenAI Client (openai_client.py): Manages interactions with the OpenAI API for NLP tasks.
+3. Google Client (google_client.py): Handles authentication and interactions with Google APIs.
+4. Calendar Assistant: Manages scheduling and calendar-related tasks.
+5. Family Prompt Generator: Generates prompts for family communication.
+6. Travel Assistant: Parses and processes travel-related requests.
+7. Task Manager: Handles to-do list operations and scheduling.
+8. Document Retriever: Manages document embedding and retrieval from Google Drive.
+
+The system is designed to be modular, scalable, and easily extendable with new features. It leverages AI capabilities to understand and process natural language requests, making it intuitive for users to interact with various services through a single interface in Slack.
+
+slack_ai_assistant/
+│
+├── main.py
+├── config.py
+├── requirements.txt
+├── .env
+│
+├── app/
+│   ├── __init__.py
+│   ├── slack_bot.py
+│   ├── openai_client.py
+│   ├── google_client.py
+│   │
+│   ├── services/
+│   │   ├── __init__.py
+│   │   ├── calendar/
+│   │   │   ├── __init__.py
+│   │   │   ├── calendar_manager.py
+│   │   │   └── email_sender.py
+│   │   │
+│   │   ├── texts/
+│   │   │   ├── __init__.py
+│   │   │   ├── prompt_generator.py
+│   │   │   └── contact_tracker.py
+│   │   │
+│   │   ├── travel/
+│   │   │   ├── __init__.py
+│   │   │   ├── travel_parser.py
+│   │   │   └── booking_manager.py
+│   │   │
+│   │   ├── todo/
+│   │   │   ├── __init__.py
+│   │   │   ├── task_manager.py
+│   │   │   └── schedule_sender.py
+│   │   │
+│   │   └── document_retrieval/
+│   │       ├── __init__.py
+│   │       ├── embedding_manager.py
+│   │       └── document_searcher.py
+│
+├── database/
+│   ├── __init__.py
+│   ├── db_manager.py
+│   └── models.py
+│
+├── utils/
+│   ├── __init__.py
+│   ├── logger.py
+│   └── helpers.py
+│
+└── tests/
+    ├── __init__.py
+    ├── test_calendar_assistant.py
+    ├── test_family_prompt.py
+    ├── test_travel_assistant.py
+    ├── test_todo_list.py
+    └── test_document_retrieval.py
