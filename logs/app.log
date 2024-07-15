@@ -1,2 +1,50 @@
 2024-07-04 01:17:14,851 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
 2024-07-15 13:06:06,067 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:16:48,965 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:28:20,244 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:30:57,001 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:34:51,565 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:34:57,338 - slack_ai_assistant - ERROR - Error in handle_travel_command: 'NoneType' object has no attribute 'parse_travel_request'
+2024-07-15 13:34:57,338 - slack_ai_assistant - ERROR - Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 67, in handle_travel_command
+    travel_request = travel_planner.parse_travel_request(command["text"])
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'parse_travel_request'
+
+2024-07-15 13:39:35,361 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:46:51,063 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:46:57,031 - slack_ai_assistant - ERROR - Error in handle_travel_command: string indices must be integers, not 'str'
+2024-07-15 13:46:57,032 - slack_ai_assistant - ERROR - Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 64, in handle_travel_command
+    flights = travel_planner.search_flights(travel_request["origin"], travel_request["destination"], travel_request["departure_date"], travel_request["return_date"])
+                                            ~~~~~~~~~~~~~~^^^^^^^^^^
+TypeError: string indices must be integers, not 'str'
+
+2024-07-15 13:49:46,751 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:50:02,251 - slack_ai_assistant - ERROR - Failed to parse JSON from OpenAI response: {
+  "origin": None,
+  "destination": "Nashville",
+  "departure_date": "2022-02-18",
+  "return_date": "2022-02-20",
+  "check_in": None,
+  "check_out": None
+}
+2024-07-15 13:50:15,511 - slack_ai_assistant - ERROR - Failed to parse JSON from OpenAI response: {
+  "origin": None,
+  "destination": "Nashville",
+  "departure_date": "2022-02-18",
+  "return_date": "2022-02-20",
+  "check_in": None,
+  "check_out": None
+}
+2024-07-15 13:52:21,160 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 13:52:34,546 - slack_ai_assistant - ERROR - Failed to parse response from OpenAI: {
+  "origin": null,
+  "destination": "Nashville",
+  "departure_date": null,
+  "return_date": null,
+  "check_in": "this weekend",
+  "check_out": null
+}
+2024-07-15 13:55:48,363 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-15 14:01:40,313 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
