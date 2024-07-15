@@ -80,39 +80,22 @@ class FlightSearch:
                 logger.error(f"SerpAPI error: {data['error']}")
                 return {"error": "Failed to retrieve flight data"}
 
-            flights_by_airline = defaultdict(list)
-            all_flights = data.get("best_flights", []) + data.get("other_flights", [])
-            
-            for flight_group in all_flights:
+            best_flights = data.get("best_flights", [])
+            if not best_flights:
+                return {"formatted_output": ["No best flights found"]}
+
+            # Extract and format the best flights
+            formatted_output = []
+            for flight_group in best_flights:
                 for flight in flight_group.get("flights", []):
-                    flight_info = {
-                        "airline": flight.get("airline"),
-                        "flight_number": flight.get("flight_number"),
-                        "departure": f"{flight['departure_airport']['id']} at {flight['departure_airport']['time']}",
-                        "arrival": f"{flight['arrival_airport']['id']} at {flight['arrival_airport']['time']}",
-                        "price": flight_group.get("price"),
-                        "duration": flight.get("duration"),
-                        "stops": len(flight_group.get("flights", [])) - 1
-                    }
-                    flights_by_airline[flight_info["airline"]].append(flight_info)
-
-            # Sort flights within each airline by price
-            for airline in flights_by_airline:
-                flights_by_airline[airline].sort(key=itemgetter("price"))
-
-            # Create a formatted output string
-            output = f"*Flights from {origin} to {destination} on {departure_date}:*\n\n"
-            for airline, flights in sorted(flights_by_airline.items()):
-                for flight in flights:
                     duration_hours, duration_minutes = divmod(flight["duration"], 60)
-                    output += (
-                        f"• {airline} {flight['flight_number']}: ${flight['price']} - "
-                        f"{duration_hours}h {duration_minutes}m - {flight['stops']} stop(s)\n"
+                    formatted_output.append(
+                        f"{flight['airline']} - ${flight_group['price']} - {flight['departure_airport']['time']} - "
+                        f"{duration_hours}h {duration_minutes}m - {len(flight_group.get('flights', [])) - 1} stop(s)"
                     )
-                output += "\n"  # Add a newline between airlines
 
-            logger.info(f"Found {sum(len(flights) for flights in flights_by_airline.values())} flights")
-            return {"formatted_output": output.strip()}
+            logger.info(f"Found {len(best_flights)} best flights")
+            return {"formatted_output": formatted_output}
 
         except requests.RequestException as e:
             logger.error(f"Error in search_flights: {str(e)}")
