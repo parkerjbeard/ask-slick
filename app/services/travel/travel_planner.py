@@ -101,7 +101,21 @@ class TravelPlanner:
                     else:
                         parsed_request[key] = get_next_weekday(parsed_request[key])
                 else:
-                    parsed_request[key] = parse_date(parsed_request[key])
+                    parsed_date = parse_date(parsed_request[key])
+                    if parsed_date:
+                        # Ensure the date is in the future
+                        current_year = datetime.now().year
+                        parsed_year = datetime.strptime(parsed_date, '%Y-%m-%d').year
+                        if parsed_year < current_year:
+                            # If the parsed year is in the past, update it to the next occurrence
+                            updated_date = datetime.strptime(parsed_date, '%Y-%m-%d').replace(year=current_year)
+                            if updated_date < datetime.now():
+                                updated_date = updated_date.replace(year=current_year + 1)
+                            parsed_request[key] = updated_date.strftime('%Y-%m-%d')
+                        else:
+                            parsed_request[key] = parsed_date
+                    else:
+                        parsed_request[key] = None
 
             if parsed_request['check_in'] == 'this weekend' or parsed_request['check_out'] == 'this weekend':
                 parsed_request['check_in'], parsed_request['check_out'] = get_weekend_dates()
@@ -171,8 +185,8 @@ class TravelPlanner:
                     travel_request["return_date"]
                 )
                 response += f"Flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}:\n"
-                response += f"{json.dumps(flights, indent=2)}\n\n"
-                logger.info(f"Found {len(flights.get('flights', []))} flights")
+                response += f"{flights}\n\n"  # Directly append the string output
+                logger.info("Found best flights")
 
             if travel_request["destination"] and not (travel_request["origin"] or (travel_request["check_in"] and travel_request["check_out"])):
                 logger.info(f"Generating travel suggestions for {travel_request['destination']}")
@@ -191,6 +205,19 @@ class TravelPlanner:
             logger.error(f"Error in plan_trip: {str(e)}", exc_info=True)
             return f"An error occurred while planning your trip: {str(e)}"
 
+    def search_return_flights(self, departure_token: str, return_date: str) -> str:
+        try:
+            flights = self.flight_search.search_flights(
+                origin="",  # Not needed when using departure_token
+                destination="",  # Not needed when using departure_token
+                departure_date="",  # Not needed when using departure_token
+                return_date=return_date,
+                departure_token=departure_token
+            )
+            return flights
+        except Exception as e:
+            logger.error(f"Error in search_return_flights: {str(e)}", exc_info=True)
+            return f"An error occurred while searching for return flights: {str(e)}"
 
     def generate_travel_suggestions(self, destination: str) -> str:
         """

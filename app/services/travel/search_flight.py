@@ -27,7 +27,7 @@ class FlightSearch:
             "show_hidden": "false"
         }
 
-    def search_flights(self, origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, **kwargs) -> dict:
+    def search_flights(self, origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, **kwargs) -> str:
         """
         Search for flights using the SerpAPI Google Flights API with advanced options.
         """
@@ -78,28 +78,38 @@ class FlightSearch:
 
             if "error" in data:
                 logger.error(f"SerpAPI error: {data['error']}")
-                return {"error": "Failed to retrieve flight data"}
+                return "Failed to retrieve flight data"
 
             best_flights = data.get("best_flights", [])
             if not best_flights:
-                return {"formatted_output": ["No best flights found"]}
+                return "No best flights found"
 
             # Extract and format the best flights
             formatted_output = []
+            flight_index = 1  # Initialize flight index
             for flight_group in best_flights:
+                flight_details = []
                 for flight in flight_group.get("flights", []):
                     duration_hours, duration_minutes = divmod(flight["duration"], 60)
-                    formatted_output.append(
-                        f"{flight['airline']} - ${flight_group['price']} - {flight['departure_airport']['time']} - "
-                        f"{duration_hours}h {duration_minutes}m - {len(flight_group.get('flights', [])) - 1} stop(s)"
+                    # Format the departure time to exclude the year
+                    departure_time = datetime.strptime(flight['departure_airport']['time'], '%Y-%m-%d %H:%M')
+                    formatted_time = departure_time.strftime('%m-%d %H:%M')
+                    flight_details.append(
+                        f"{flight['airline']} - {flight['departure_airport']['name']} ({flight['departure_airport']['id']}) "
+                        f"to {flight['arrival_airport']['name']} ({flight['arrival_airport']['id']}) - {formatted_time} - "
+                        f"{duration_hours}h {duration_minutes}m"
                     )
+                formatted_output.append(
+                    f"Flight {flight_index} - ${flight_group['price']} - {len(flight_group.get('flights', [])) - 1} stop(s):\n" +
+                    "\n".join(flight_details)
+                )
+                flight_index += 1
 
             logger.info(f"Found {len(best_flights)} best flights")
-            return {"formatted_output": formatted_output}
-
+            return "\n\n".join(formatted_output)
         except requests.RequestException as e:
             logger.error(f"Error in search_flights: {str(e)}")
-            return {"error": f"Failed to retrieve flight data: {str(e)}"}
+            return f"Failed to retrieve flight data: {str(e)}"
 
 def create_flight_search() -> FlightSearch:
     """

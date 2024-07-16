@@ -56,7 +56,7 @@ class OpenAIClient:
         """
         messages = [
             {"role": "system", "content": "You are a helpful assistant that classifies text."},
-            {"role": "user", "content": f"Please classify the following text into one of these categories: {', '.join(categories)}\n\nText: {text}"}
+            {"role": "user", "content": f"Please classify the following text into one of these categories. Your output will be a single word: {', '.join(categories)}\n\nText: {text}"}
         ]
         response = self._create_chat_completion(messages)
         return response["message"]
@@ -82,3 +82,28 @@ class OpenAIClient:
         ]
         response = self._create_chat_completion(messages)
         return response["message"].split(", ")
+
+    def classify_with_context(self, current_message: str, chat_history: List[str], categories: List[str]) -> str:
+        """
+        Classify the current message based on the chat history and given categories.
+        """
+        context = "\n".join(chat_history[-5:])  # Use the last 5 messages for context
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that classifies messages based on context. Pay close attention to the difference between travel requests and flight selections."},
+            {"role": "user", "content": f"""Given the following chat history and categories, classify the current message. Your output should be a single word from the categories list.
+
+            Chat history:
+            {context}
+
+            Current message: {current_message}
+
+            Categories: {', '.join(categories)}
+
+            Remember:
+            - 'travel' is for new travel requests or questions about travel.
+            - 'flight_selection' is only for when a user is selecting a specific flight from a list of options previously provided.
+            - If in doubt between 'travel' and 'flight_selection', choose 'travel'.
+            """}
+        ]
+        response = self._create_chat_completion(messages)
+        return response["message"].strip().lower()
