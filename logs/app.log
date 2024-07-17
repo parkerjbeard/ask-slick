@@ -2462,3 +2462,11 @@ TypeError: object str can't be used in 'await' expression
 2024-07-17 00:22:11,748 - slack_ai_assistant - INFO - EmailAssistant not found, creating a new one
 2024-07-17 00:22:12,008 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
 2024-07-17 00:22:12,107 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-17 16:16:37,372 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-17 16:16:37,521 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-17 16:16:37,742 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-17 16:16:37,849 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-17 16:17:20,995 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-17 16:17:21,193 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-17 16:17:21,318 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-17 16:17:21,472 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
