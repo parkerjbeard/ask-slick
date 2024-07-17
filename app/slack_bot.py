@@ -1,6 +1,5 @@
 import os
 import json
-import asyncio
 from slack_bolt.async_app import AsyncApp
 from app.assistant_manager import AssistantManager
 from app.dispatcher import Dispatcher
@@ -45,7 +44,7 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
             raise ValueError("Invalid dispatch result")
 
         if function_output:
-            await send_slack_response(say, function_output, None, channel, event.get("ts"))
+            await send_slack_response(say, function_output, None, channel)
         else:
             run = assistant_manager.wait_on_run(thread_id, run_id)
 
@@ -65,7 +64,7 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
 
             if messages.data:
                 assistant_response = messages.data[-1].content[0].text.value
-                await send_slack_response(say, assistant_response, None, channel, event.get("ts"))
+                await send_slack_response(say, assistant_response, None, channel)
             else:
                 await say(text="I'm sorry, but I couldn't generate a response. Please try again.", channel=channel)
 
@@ -86,7 +85,7 @@ async def handle_tool_call(tool_call, travel_planner):
     
     return json.dumps(result)
 
-async def send_slack_response(say, assistant_response, tool_responses, channel, thread_ts):
-    await say(text=assistant_response, channel=channel, thread_ts=thread_ts)
+async def send_slack_response(say, assistant_response, tool_responses, channel):
+    await say(text=assistant_response, channel=channel)
     if tool_responses:
-        await say(text=str(tool_responses), channel=channel, thread_ts=thread_ts)
+        await say(text=str(tool_responses), channel=channel)
