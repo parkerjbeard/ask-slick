@@ -7,9 +7,13 @@ def parse_date(date_string: str) -> str:
         return None
     parsed_date = dateparser.parse(date_string, settings={'RELATIVE_BASE': datetime.now()})
     if parsed_date:
-        # Ensure the date is in the future
-        if parsed_date < datetime.now():
-            parsed_date = parsed_date.replace(year=datetime.now().year + 1)
+        current_date = datetime.now()
+        # If the parsed date is in the past, adjust it to the next occurrence
+        if parsed_date < current_date:
+            # Adjust the year to the next occurrence
+            parsed_date = parsed_date.replace(year=current_date.year)
+            if parsed_date < current_date:
+                parsed_date = parsed_date.replace(year=current_date.year + 1)
         return parsed_date.strftime('%Y-%m-%d')
     return None
 
