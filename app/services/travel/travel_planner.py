@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from .search_flight import create_flight_search
 from .search_hotel import create_hotel_search
 from utils.dates_format import parse_date, get_weekend_dates, get_next_weekday
+from app.openai_helper import OpenAIClient
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -22,18 +23,37 @@ class TravelPlanner:
 
         self.flight_search = create_flight_search()
         self.hotel_search = create_hotel_search()
+        self.openai_client = OpenAIClient()
 
-    def parse_travel_request(self, origin: str, destination: str, departure_date: str, return_date: str = None, check_in: str = None, check_out: str = None) -> dict:
+    def parse_travel_request(self, prompt: str) -> dict:
         try:
-            parsed_request = {
-                "origin": origin,
-                "destination": destination,
-                "departure_date": departure_date,
-                "return_date": return_date,
-                "check_in": check_in,
-                "check_out": check_out
-            }
+            parse_prompt = (
+                "Parse the following travel request into a JSON format with keys: "
+                "origin, destination, departure_date, return_date, check_in, check_out. "
+                "For origin and destination, provide the 3-letter airport code. "
+                "If any information is missing, use null as the value. "
+                "For date ranges like 'this weekend', use the range in the check_in and check_out fields. "
+                "For specific days like 'Tuesday' or 'Friday', use those as departure_date and return_date. "
+                "You have already been given a default departure origin if one was not provided. If one was provided, this is the new departure origin. "
+                f"Travel request: {prompt}"
+            )
+            response = self.openai_client.extract_travel_request(parse_prompt)
+            
+            if isinstance(response, dict) and 'message' in response:
+                response_text = response['message']
+            elif isinstance(response, str):
+                response_text = response
+            else:
+                logger.error(f"Unexpected response format from OpenAI: {response}")
+                return {"error": "Failed to parse travel request. Unexpected response format."}
 
+            try:
+                parsed_request = json.loads(response_text)
+            except json.JSONDecodeError:
+                logger.error(f"Failed to parse JSON from OpenAI response: {response_text}")
+                return {"error": "Failed to parse travel request. Please provide more details."}
+
+            # Rest of the method remains the same
             departure_date = None
             for key in ['departure_date', 'return_date', 'check_in', 'check_out']:
                 if parsed_request[key] and parsed_request[key].lower() in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
@@ -45,21 +65,7 @@ class TravelPlanner:
                     else:
                         parsed_request[key] = get_next_weekday(parsed_request[key])
                 else:
-                    parsed_date = parse_date(parsed_request[key])
-                    if parsed_date:
-                        # Ensure the date is in the future
-                        current_year = datetime.now().year
-                        parsed_year = datetime.strptime(parsed_date, '%Y-%m-%d').year
-                        if parsed_year < current_year:
-                            # If the parsed year is in the past, update it to the next occurrence
-                            updated_date = datetime.strptime(parsed_date, '%Y-%m-%d').replace(year=current_year)
-                            if updated_date < datetime.now():
-                                updated_date = updated_date.replace(year=current_year + 1)
-                            parsed_request[key] = updated_date.strftime('%Y-%m-%d')
-                        else:
-                            parsed_request[key] = parsed_date
-                    else:
-                        parsed_request[key] = None
+                    parsed_request[key] = parse_date(parsed_request[key])
 
             if parsed_request['check_in'] == 'this weekend' or parsed_request['check_out'] == 'this weekend':
                 parsed_request['check_in'], parsed_request['check_out'] = get_weekend_dates()
@@ -85,11 +91,13 @@ class TravelPlanner:
                 logger.warning(f"Invalid origin airport code: {parsed_request['origin']}")
             if not self._is_valid_airport_code(parsed_request['destination']):
                 logger.warning(f"Invalid destination airport code: {parsed_request['destination']}")
-
+            
+            self._normalize_airport_codes(parsed_request)
+            print(parsed_request)
             return parsed_request
-
+        
         except Exception as e:
-            logger.error(f"Error in parse_travel_request: {str(e)}")
+            logger.error(f"Error in parse_travel_request: {str(e)}", exc_info=True)
             return {"error": f"Failed to parse travel request: {str(e)}"}
 
     def _is_valid_airport_code(self, code: str) -> bool:
@@ -108,45 +116,80 @@ class TravelPlanner:
             flights = []
             logger.info(f"Planning trip with request: {json.dumps(travel_request, indent=2)}")
 
-            if travel_request["destination"] and travel_request["check_in"] and travel_request["check_out"]:
-                logger.info(f"Searching for accommodations in {travel_request['destination']} from {travel_request['check_in']} to {travel_request['check_out']}")
-                accommodations = self.hotel_search.search_hotels(
-                    travel_request["destination"],
-                    travel_request["check_in"],
-                    travel_request["check_out"]
-                )
-                response += f"Accommodations in {travel_request['destination']} from {travel_request['check_in']} to {travel_request['check_out']}:\n"
-                response += f"{json.dumps(accommodations, indent=2)}\n\n"
-                logger.info(f"Found {len(accommodations)} accommodations")
+            hotel_response = self._search_hotels(travel_request)
+            if hotel_response:
+                response += hotel_response
 
-            if travel_request["origin"] and travel_request["destination"] and travel_request["departure_date"]:
-                logger.info(f"Searching for flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}")
-                flights = self.flight_search.search_flights(
-                    travel_request["origin"],
-                    travel_request["destination"],
-                    travel_request["departure_date"],
-                    travel_request["return_date"]
-                )
-                response += f"Flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}:\n"
-                response += f"{flights}\n\n"  # Directly append the string output
-                logger.info("Found best flights")
+            flight_response, flights = self._search_flights(travel_request)
+            if flight_response:
+                response += flight_response
 
-            if travel_request["destination"] and not (travel_request["origin"] or (travel_request["check_in"] and travel_request["check_out"])):
-                logger.info(f"Generating travel suggestions for {travel_request['destination']}")
-                suggestions = self.generate_travel_suggestions(travel_request["destination"])
-                response += f"Suggestions for {travel_request['destination']}:\n{suggestions}"
-                logger.info("Generated travel suggestions")
+            suggestion_response = self._generate_suggestions(travel_request)
+            if suggestion_response:
+                response += suggestion_response
 
             if not response:
-                logger.warning("Insufficient information provided in the travel request")
-                logger.info(f"Missing information: {[k for k, v in travel_request.items() if v is None]}")
-                response = "I'm sorry, but I couldn't determine what specific travel information you need. Could you please provide more details about what you're looking for?"
+                response = self._handle_insufficient_info(travel_request)
 
             logger.info("Trip planning completed successfully")
             return response.strip(), flights
         except Exception as e:
             logger.error(f"Error in plan_trip: {str(e)}", exc_info=True)
             return f"An error occurred while planning your trip: {str(e)}", []
+
+    def _normalize_airport_codes(self, travel_request: dict) -> None:
+        """Normalize airport codes to uppercase."""
+        if travel_request["origin"]:
+            travel_request["origin"] = travel_request["origin"].upper()
+        if travel_request["destination"]:
+            travel_request["destination"] = travel_request["destination"].upper()
+
+    def _search_hotels(self, travel_request: dict) -> str:
+        """Search for hotels based on the travel request."""
+        if travel_request["destination"] and travel_request["check_in"] and travel_request["check_out"]:
+            logger.info(f"Searching for accommodations in {travel_request['destination']} from {travel_request['check_in']} to {travel_request['check_out']}")
+            accommodations = self.hotel_search.search_hotels(
+                travel_request["destination"],
+                travel_request["check_in"],
+                travel_request["check_out"]
+            )
+            response = f"Accommodations in {travel_request['destination']} from {travel_request['check_in']} to {travel_request['check_out']}:\n"
+            response += f"{json.dumps(accommodations, indent=2)}\n\n"
+            logger.info(f"Found {len(accommodations)} accommodations")
+            return response
+        return ""
+
+    async def _search_flights(self, travel_request: dict) -> (str, list):
+        """Search for flights based on the travel request."""
+        if travel_request["origin"] and travel_request["destination"] and travel_request["departure_date"]:
+            logger.info(f"Searching for flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}")
+            flights = self.flight_search.search_flights(
+                travel_request["origin"],
+                travel_request["destination"],
+                travel_request["departure_date"],
+                travel_request["return_date"]
+            )
+            response = f"Flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}:\n"
+            response += f"{flights}\n\n"
+            logger.info("Found best flights")
+            return response, flights
+        return ""
+
+    def _generate_suggestions(self, travel_request: dict) -> str:
+        """Generate travel suggestions if only destination is provided."""
+        if travel_request["destination"] and not (travel_request["origin"] or (travel_request["check_in"] and travel_request["check_out"])):
+            logger.info(f"Generating travel suggestions for {travel_request['destination']}")
+            suggestions = self.generate_travel_suggestions(travel_request["destination"])
+            response = f"Suggestions for {travel_request['destination']}:\n{suggestions}"
+            logger.info("Generated travel suggestions")
+            return response
+        return ""
+
+    def _handle_insufficient_info(self, travel_request: dict) -> str:
+        """Handle cases where insufficient information is provided."""
+        logger.warning("Insufficient information provided in the travel request")
+        logger.info(f"Missing information: {[k for k, v in travel_request.items() if v is None]}")
+        return "I'm sorry, but I couldn't determine what specific travel information you need. Could you please provide more details about what you're looking for?"
 
     def search_return_flights(self, departure_token: str, return_date: str) -> str:
         try:
