@@ -1,37 +1,14 @@
 import os
-import openai
+from openai import OpenAI
 from typing import Dict, Any
 from utils.logger import logger
 import json
-import dateparser
 from datetime import datetime, timedelta
 from .search_flight import create_flight_search
 from .search_hotel import create_hotel_search
+from utils.dates_format import parse_date, get_weekend_dates, get_next_weekday
 
-def parse_date(date_string: str) -> str:
-    """Parse a date string and return it in YYYY-MM-DD format."""
-    if date_string is None or date_string.lower() == 'null':
-        return None
-    parsed_date = dateparser.parse(date_string, settings={'RELATIVE_BASE': datetime.now()})
-    return parsed_date.strftime('%Y-%m-%d') if parsed_date else None
-
-def get_weekend_dates():
-    """Get the dates for the upcoming weekend."""
-    today = datetime.now()
-    saturday = today + timedelta((5 - today.weekday()) % 7)
-    sunday = saturday + timedelta(days=1)
-    return saturday.strftime('%Y-%m-%d'), sunday.strftime('%Y-%m-%d')
-
-def get_next_weekday(weekday: str, start_date: datetime = None) -> str:
-    """Get the date of the next occurrence of the given weekday."""
-    weekdays = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
-    start_date = start_date or datetime.now()
-    target_day = weekdays.index(weekday.lower())
-    days_ahead = target_day - start_date.weekday()
-    if days_ahead <= 0:
-        days_ahead += 7
-    next_day = start_date + timedelta(days=days_ahead)
-    return next_day.strftime('%Y-%m-%d')
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class TravelPlanner:
     def __init__(self):
@@ -39,56 +16,23 @@ class TravelPlanner:
         if not self.api_key:
             logger.error("OpenAI API key is not set in environment variables")
             raise ValueError("OpenAI API key is not set")
-        
-        openai.api_key = self.api_key
-        self.system_message = {
-            "role": "system",
-            "content": "You are a travel planner assistant. You can parse travel requests, search for flights and accommodations, and generate travel suggestions."
-        }
-        self.conversation_history = [self.system_message]
         self.default_origin = os.getenv("DEFAULT_ORIGIN", "")
         if not self.default_origin:
             logger.warning("DEFAULT_ORIGIN is not set in environment variables")
-        
+
         self.flight_search = create_flight_search()
         self.hotel_search = create_hotel_search()
 
-    def _create_message_and_run(self, content: str) -> Dict[str, Any]:
+    def parse_travel_request(self, origin: str, destination: str, departure_date: str, return_date: str = None, check_in: str = None, check_out: str = None) -> dict:
         try:
-            self.conversation_history.append({"role": "user", "content": content})
-
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=self.conversation_history
-            )
-
-            assistant_message = response.choices[0].message['content']
-            self.conversation_history.append({"role": "assistant", "content": assistant_message})
-
-            return {"role": "assistant", "message": assistant_message}
-        except Exception as e:
-            logger.error(f"Error in _create_message_and_run: {str(e)}")
-            raise
-
-    def parse_travel_request(self, prompt: str) -> dict:
-        try:
-            parse_prompt = (
-                "Parse the following travel request into a JSON format with keys: "
-                "origin, destination, departure_date, return_date, check_in, check_out. "
-                "For origin and destination, provide the 3-letter airport code. "
-                "If any information is missing, use null as the value. "
-                "For date ranges like 'this weekend', use the range in the check_in and check_out fields. "
-                "For specific days like 'Tuesday' or 'Friday', use those as departure_date and return_date. "
-                "You have already been given a default departure origin if one was not provided. If one was provided, this is the new departure origin. "
-                f"Travel request: {prompt}"
-            )
-            response = self._create_message_and_run(parse_prompt)
-            
-            try:
-                parsed_request = json.loads(response["message"])
-            except json.JSONDecodeError:
-                logger.error(f"Failed to parse JSON from OpenAI response: {response['message']}")
-                return {"error": "Failed to parse travel request. Please provide more details."}
+            parsed_request = {
+                "origin": origin,
+                "destination": destination,
+                "departure_date": departure_date,
+                "return_date": return_date,
+                "check_in": check_in,
+                "check_out": check_out
+            }
 
             departure_date = None
             for key in ['departure_date', 'return_date', 'check_in', 'check_out']:
@@ -143,11 +87,10 @@ class TravelPlanner:
                 logger.warning(f"Invalid destination airport code: {parsed_request['destination']}")
 
             return parsed_request
-        
+
         except Exception as e:
             logger.error(f"Error in parse_travel_request: {str(e)}")
             return {"error": f"Failed to parse travel request: {str(e)}"}
-
 
     def _is_valid_airport_code(self, code: str) -> bool:
         """
@@ -156,15 +99,15 @@ class TravelPlanner:
         """
         return code is not None and isinstance(code, str) and len(code) == 3 and code.isalpha()
 
-
-    def plan_trip(self, travel_request: dict) -> str:
+    def plan_trip(self, travel_request: dict) -> (str, list):
         """
         Plan a trip based on the parsed travel request.
         """
         try:
             response = ""
+            flights = []
             logger.info(f"Planning trip with request: {json.dumps(travel_request, indent=2)}")
-            
+
             if travel_request["destination"] and travel_request["check_in"] and travel_request["check_out"]:
                 logger.info(f"Searching for accommodations in {travel_request['destination']} from {travel_request['check_in']} to {travel_request['check_out']}")
                 accommodations = self.hotel_search.search_hotels(
@@ -200,17 +143,17 @@ class TravelPlanner:
                 response = "I'm sorry, but I couldn't determine what specific travel information you need. Could you please provide more details about what you're looking for?"
 
             logger.info("Trip planning completed successfully")
-            return response.strip()
+            return response.strip(), flights
         except Exception as e:
             logger.error(f"Error in plan_trip: {str(e)}", exc_info=True)
-            return f"An error occurred while planning your trip: {str(e)}"
+            return f"An error occurred while planning your trip: {str(e)}", []
 
     def search_return_flights(self, departure_token: str, return_date: str) -> str:
         try:
             flights = self.flight_search.search_flights(
-                origin="",  # Not needed when using departure_token
-                destination="",  # Not needed when using departure_token
-                departure_date="",  # Not needed when using departure_token
+                origin="",
+                destination="",
+                departure_date="",
                 return_date=return_date,
                 departure_token=departure_token
             )
@@ -218,17 +161,3 @@ class TravelPlanner:
         except Exception as e:
             logger.error(f"Error in search_return_flights: {str(e)}", exc_info=True)
             return f"An error occurred while searching for return flights: {str(e)}"
-
-    def generate_travel_suggestions(self, destination: str) -> str:
-        """
-        Generate travel suggestions for a given destination using OpenAI.
-        """
-        prompt = f"Provide travel suggestions for {destination}. Include popular attractions, local cuisine, and cultural experiences."
-        response = self._create_message_and_run(prompt)
-        return response["message"]
-
-def create_travel_planner() -> TravelPlanner:
-    """
-    Factory function to create a TravelPlanner instance.
-    """
-    return TravelPlanner()

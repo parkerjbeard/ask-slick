@@ -1,20 +1,19 @@
 import os
-import openai
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 from typing import List, Dict, Any
 
 class OpenAIClient:
     def __init__(self):
-        openai.api_key = os.getenv("OPENAI_API_KEY")
         self.model = "gpt-3.5-turbo"
 
     def _create_chat_completion(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
-        response = openai.ChatCompletion.create(
-            model=self.model,
-            messages=messages
-        )
+        response = client.chat.completions.create(model=self.model,
+        messages=messages)
         return {
-            "role": response.choices[0].message['role'],
-            "message": response.choices[0].message['content']
+            "role": response.choices[0].message.role,
+            "message": response.choices[0].message.content
         }
 
     def generate_text(self, prompt: str, max_tokens: int = 150) -> str:
@@ -48,7 +47,7 @@ class OpenAIClient:
             {"role": "user", "content": f"Please extract the main keywords from the following text:\n\n{text}"}
         ]
         response = self._create_chat_completion(messages)
-        return response["message"].split(", ")
+        return response["message"].strip().lower()
 
     def classify_text(self, text: str, categories: List[str]) -> str:
         """
@@ -59,7 +58,7 @@ class OpenAIClient:
             {"role": "user", "content": f"Please classify the following text into one of these categories. Your output will be a single word: {', '.join(categories)}\n\nText: {text}"}
         ]
         response = self._create_chat_completion(messages)
-        return response["message"]
+        return response["message"].strip().lower()
 
     def analyze_sentiment(self, text: str) -> str:
         """
@@ -70,7 +69,7 @@ class OpenAIClient:
             {"role": "user", "content": f"Please analyze the sentiment of the following text:\n\n{text}"}
         ]
         response = self._create_chat_completion(messages)
-        return response["message"]
+        return response['message']
 
     def search_documents(self, query: str, documents: List[str]) -> List[str]:
         """
@@ -81,7 +80,7 @@ class OpenAIClient:
             {"role": "user", "content": f"Given the following documents, please find the most relevant ones for the query: '{query}'\n\nDocuments:\n" + "\n".join(documents)}
         ]
         response = self._create_chat_completion(messages)
-        return response["message"].split(", ")
+        return response['message'].split(", ")
 
     def classify_with_context(self, current_message: str, chat_history: List[str], categories: List[str]) -> str:
         """
@@ -106,4 +105,4 @@ class OpenAIClient:
             """}
         ]
         response = self._create_chat_completion(messages)
-        return response["message"].strip().lower()
+        return response['message'].strip().lower()
