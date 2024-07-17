@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from datetime import datetime, date
 from app.services.todo.task_manager import TaskManager
 from database.db_manager import DatabaseManager
-from app.openai_client import OpenAIClient
+from app.openai_helper import OpenAIClient
 
 class TestTaskManager(unittest.TestCase):
     def setUp(self):

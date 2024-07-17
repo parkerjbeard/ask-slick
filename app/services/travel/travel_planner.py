@@ -53,7 +53,6 @@ class TravelPlanner:
                 logger.error(f"Failed to parse JSON from OpenAI response: {response_text}")
                 return {"error": "Failed to parse travel request. Please provide more details."}
 
-            # Rest of the method remains the same
             departure_date = None
             for key in ['departure_date', 'return_date', 'check_in', 'check_out']:
                 if parsed_request[key] and parsed_request[key].lower() in ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']:
@@ -66,6 +65,14 @@ class TravelPlanner:
                         parsed_request[key] = get_next_weekday(parsed_request[key])
                 else:
                     parsed_request[key] = parse_date(parsed_request[key])
+
+                # Ensure the date is in the future
+                if parsed_request[key]:
+                    parsed_date = datetime.strptime(parsed_request[key], '%Y-%m-%d')
+                    if parsed_date < datetime.now():
+                        # If the date is in the past, set it to the same day next year
+                        parsed_date = parsed_date.replace(year=datetime.now().year + 1)
+                        parsed_request[key] = parsed_date.strftime('%Y-%m-%d')
 
             if parsed_request['check_in'] == 'this weekend' or parsed_request['check_out'] == 'this weekend':
                 parsed_request['check_in'], parsed_request['check_out'] = get_weekend_dates()
@@ -159,21 +166,23 @@ class TravelPlanner:
             return response
         return ""
 
-    async def _search_flights(self, travel_request: dict) -> (str, list):
+    async def _search_flights(self, travel_request: dict) -> str:
         """Search for flights based on the travel request."""
         if travel_request["origin"] and travel_request["destination"] and travel_request["departure_date"]:
             logger.info(f"Searching for flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}")
             flights = self.flight_search.search_flights(
-                travel_request["origin"],
-                travel_request["destination"],
-                travel_request["departure_date"],
-                travel_request["return_date"]
+                origin=travel_request["origin"],
+                destination=travel_request["destination"],
+                departure_date=travel_request["departure_date"],
+                return_date=travel_request.get("return_date"),
+                adults=travel_request.get("adults", "1"),
+                travel_class=travel_request.get("travel_class", "1")
             )
             response = f"Flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}:\n"
             response += f"{flights}\n\n"
             logger.info("Found best flights")
-            return response, flights
-        return ""
+            return response
+        return "Insufficient information to search for flights."
 
     def _generate_suggestions(self, travel_request: dict) -> str:
         """Generate travel suggestions if only destination is provided."""

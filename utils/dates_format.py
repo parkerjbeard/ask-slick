@@ -6,7 +6,12 @@ def parse_date(date_string: str) -> str:
     if date_string is None or date_string.lower() == 'null':
         return None
     parsed_date = dateparser.parse(date_string, settings={'RELATIVE_BASE': datetime.now()})
-    return parsed_date.strftime('%Y-%m-%d') if parsed_date else None
+    if parsed_date:
+        # Ensure the date is in the future
+        if parsed_date < datetime.now():
+            parsed_date = parsed_date.replace(year=datetime.now().year + 1)
+        return parsed_date.strftime('%Y-%m-%d')
+    return None
 
 def get_weekend_dates():
     """Get the dates for the upcoming weekend."""

@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 from datetime import datetime, timedelta
 from app.services.calendar.calendar_manager import CalendarAssistant
 from app.google_client import GoogleClient
-from app.openai_client import OpenAIClient
+from app.openai_helper import OpenAIClient
 
 class TestCalendarAssistant(unittest.TestCase):
     def setUp(self):

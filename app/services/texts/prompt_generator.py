@@ -1,5 +1,5 @@
 from typing import List, Dict
-from app.openai_client import OpenAIClient
+from app.openai_helper import OpenAIClient
 
 class PromptGenerator:
     def __init__(self):

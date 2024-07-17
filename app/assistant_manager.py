@@ -1,6 +1,6 @@
 from typing import Optional
 import os
-import json  # Add this import
+import json
 from openai import OpenAI
 
 class AssistantManager:
@@ -52,12 +52,22 @@ class AssistantManager:
         )
 
     async def create_run(self, thread_id: str, assistant_id: str):
-        return await self.client.beta.threads.runs.create(
+        return self.client.beta.threads.runs.create(
             thread_id=thread_id,
             assistant_id=assistant_id
         )
 
-    async def wait_on_run(self, thread_id: str, run_id: str):
+    def wait_on_run(self, thread_id: str, run_id: str):
+        """
+        Wait for a run to complete.
+
+        Args:
+            thread_id (str): The ID of the thread.
+            run_id (str): The ID of the run.
+
+        Returns:
+            The completed run object.
+        """
         import time
         run = self.client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
         while run.status in ["queued", "in_progress"]:
@@ -66,7 +76,7 @@ class AssistantManager:
         return run
 
     async def list_messages(self, thread_id: str, order="asc", after=None):
-        return self.client.beta.threads.messages.list(thread_id=thread_id, order=order, after=after)
+        return await self.client.beta.threads.messages.list(thread_id=thread_id, order=order, after=after)
 
     async def get_assistant_id_by_name(self, name: str):
         """
@@ -99,69 +109,21 @@ class AssistantManager:
         return None
     
     async def submit_message(self, assistant_id: str, thread_id: str, user_message: str):
-        """
-        Submit a user message to a thread and create a new run.
-
-        Args:
-            assistant_id (str): The ID of the assistant.
-            thread_id (str): The ID of the thread.
-            user_message (str): The user's message content.
-
-        Returns:
-            The created run object.
-        """
-        self.client.beta.threads.messages.create(
+        await self.client.beta.threads.messages.create(
             thread_id=thread_id, role="user", content=user_message
         )
-        return self.client.beta.threads.runs.create(
+        return await self.client.beta.threads.runs.create(
             thread_id=thread_id,
             assistant_id=assistant_id,
         )
 
     async def get_response(self, thread_id: str):
-        """
-        Get all messages from a thread in ascending order.
-
-        Args:
-            thread_id (str): The ID of the thread.
-
-        Returns:
-            The list of messages in the thread.
-        """
         return self.client.beta.threads.messages.list(thread_id=thread_id, order="asc")
 
     async def create_thread_and_run(self, assistant_id: str, user_input: str):
-        """
-        Create a new thread and submit a message to it.
-
-        Args:
-            assistant_id (str): The ID of the assistant.
-            user_input (str): The user's message content.
-
-        Returns:
-            tuple: A tuple containing the created thread and run objects.
-        """
         thread = await self.create_thread()
         run = await self.submit_message(assistant_id, thread.id, user_input)
         return thread, run
-
-    async def wait_on_run(self, thread_id: str, run_id: str):
-        """
-        Wait for a run to complete.
-
-        Args:
-            thread_id (str): The ID of the thread.
-            run_id (str): The ID of the run.
-
-        Returns:
-            The completed run object.
-        """
-        import time
-        run = self.client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
-        while run.status in ["queued", "in_progress"]:
-            time.sleep(0.5)
-            run = self.client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
-        return run
 
     def pretty_print(self, messages):
         """
@@ -188,27 +150,9 @@ class AssistantManager:
         tool_call = run.required_action.submit_tool_outputs.tool_calls[0]
         return tool_call
 
-    async def submit_tool_outputs(self, thread_id: str, run_id: str, tool_call, responses):
-        """
-        Submit tool outputs for a run.
-
-        Args:
-            thread_id (str): The ID of the thread.
-            run_id (str): The ID of the run.
-            tool_call: The tool call object.
-            responses: The responses to submit.
-
-        Returns:
-            The updated run object.
-        """
-        run = self.client.beta.threads.runs.submit_tool_outputs(
+    async def submit_tool_outputs(self, thread_id, run_id, tool_outputs):
+        return await self.client.beta.threads.runs.submit_tool_outputs(
             thread_id=thread_id,
             run_id=run_id,
-            tool_outputs=[
-                {
-                    "tool_call_id": tool_call.id,
-                    "output": json.dumps(responses),
-                }
-            ],
+            tool_outputs=tool_outputs
         )
-        return run

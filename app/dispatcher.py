@@ -1,6 +1,6 @@
 from openai import OpenAI
 from app.assistant_manager import AssistantManager
-from app.openai_client import OpenAIClient
+from app.openai_helper import OpenAIClient
 from app.services.travel.travel_planner import TravelPlanner
 from utils.logger import logger
 import os
@@ -24,6 +24,10 @@ class Dispatcher:
 
         if category == "travel":
             assistant_name = "TravelAssistant"
+            travel_structured_data = self.travel_planner.parse_travel_request(user_input)
+            if "error" in travel_structured_data:
+                logger.error(f"Error parsing travel request: {travel_structured_data['error']}")
+                return {'thread_id': None, 'run_id': None}
         elif category == "schedule":
             assistant_name = "ScheduleAssistant"
         elif category == "family":
@@ -46,27 +50,32 @@ class Dispatcher:
             assistant_id = await self.create_assistant(assistant_name)
             logger.info(f"Created new assistant: {assistant_name} (ID: {assistant_id})")
 
-        thread = self.assistant_manager.create_thread()
+        thread = await self.assistant_manager.create_thread()
         logger.info(f"Created new thread: {thread.id}")
 
         # Create a run with the selected assistant
-        run = await self.assistant_manager.create_run(  # Ensure this is awaited
+        run = await self.assistant_manager.create_run(
             assistant_id=assistant_id,
             thread_id=thread.id
         )
         logger.info(f"Created new run: {run.id}")
-
-        # Example of calling a function and handling its output
+        
+        function_output = None
         if assistant_name == "TravelAssistant":
-            function_name = "parse_travel_request"
-            function_params = {
-                "prompt": user_input
-            }
-            logger.info(f"Calling function: {function_name}")
-            function_output = await self.call_function(function_name, function_params)
-            logger.info(f"Function Output: {function_output}")
+            function_name = "search_flights"
+            function_params = travel_structured_data
+            if "error" not in function_params:
+                logger.info(f"Calling function: {function_name} with parameters: {function_params}")
+                function_output = await self.call_function(function_name, function_params)
+                logger.info(f"Function Output: {function_output}")
+            else:
+                logger.error(f"Cannot call function due to error in travel request: {function_params['error']}")
 
-        return run, thread
+        return {
+            'thread_id': thread.id, 
+            'run_id': run.id, 
+            'function_output': function_output
+        }
 
     async def create_assistant(self, name):
         logger.info(f"Creating new assistant: {name}")
@@ -87,8 +96,8 @@ class Dispatcher:
                 {
                     "type": "function",
                     "function": {
-                        "name": "parse_travel_request",
-                        "description": "Parse a travel request into structured data.",
+                        "name": "search_flights",
+                        "description": "Search for flights using the SerpAPI Google Flights API with advanced options.",
                         "parameters": {
                             "type": "object",
                             "properties": {
@@ -106,48 +115,72 @@ class Dispatcher:
                                 },
                                 "return_date": {
                                     "type": "string",
-                                    "description": "The date of return in YYYY-MM-DD format"
+                                    "description": "The date of return in YYYY-MM-DD format (optional for one-way trips)"
                                 },
-                                "check_in": {
+                                "currency": {
                                     "type": "string",
-                                    "description": "The check-in date for accommodation in YYYY-MM-DD format"
+                                    "description": "Currency code (e.g., USD, EUR)"
                                 },
-                                "check_out": {
+                                "travel_class": {
                                     "type": "string",
-                                    "description": "The check-out date for accommodation in YYYY-MM-DD format"
+                                    "description": "Travel class (e.g., '1' for Economy, '2' for Premium Economy, '3' for Business, '4' for First Class)"
+                                },
+                                "adults": {
+                                    "type": "string",
+                                    "description": "Number of adult passengers"
+                                },
+                                "children": {
+                                    "type": "string",
+                                    "description": "Number of child passengers"
+                                },
+                                "infants_in_seat": {
+                                    "type": "string",
+                                    "description": "Number of infants in seat"
+                                },
+                                "infants_on_lap": {
+                                    "type": "string",
+                                    "description": "Number of infants on lap"
+                                },
+                                "stops": {
+                                    "type": "string",
+                                    "description": "Number of stops (e.g., '0' for non-stop, '1' for one stop)"
+                                },
+                                "max_price": {
+                                    "type": "string",
+                                    "description": "Maximum price for flights"
                                 }
                             },
                             "required": ["origin", "destination", "departure_date"]
                         }
                     }
                 },
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "plan_trip",
-                        "description": "Plan a trip based on the parsed travel request.",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "travel_request": {
-                                    "type": "object",
-                                    "description": "The parsed travel request",
-                                    "properties": {
-                                        "origin": {"type": "string"},
-                                        "destination": {"type": "string"},
-                                        "departure_date": {"type": "string"},
-                                        "return_date": {"type": "string"},
-                                        "check_in": {"type": "string"},
-                                        "check_out": {"type": "string"}
-                                    },
-                                    "required": ["origin", "destination", "departure_date"]
-                                }
-                            },
-                            "required": ["travel_request"]
-                        }
+            ]
+            {
+                "type": "function",
+                "function": {
+                    "name": "plan_trip",
+                    "description": "Plan a trip based on the parsed travel request.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "travel_request": {
+                                "type": "object",
+                                "description": "The parsed travel request",
+                                "properties": {
+                                    "origin": {"type": "string"},
+                                    "destination": {"type": "string"},
+                                    "departure_date": {"type": "string"},
+                                    "return_date": {"type": "string"},
+                                    "check_in": {"type": "string"},
+                                    "check_out": {"type": "string"}
+                                },
+                                "required": ["origin", "destination", "departure_date"]
+                            }
+                        },
+                        "required": ["travel_request"]
                     }
                 }
-            ]
+            }
             model = "gpt-3.5-turbo-0125"
         elif name == "EmailAssistant":
             tools = [
@@ -188,15 +221,17 @@ class Dispatcher:
 
     async def call_function(self, function_name, function_params):
         logger.info(f"Calling function: {function_name} with params: {function_params}")
-        # This method should call the function and return the result
-        if function_name == "parse_travel_request":
-            result = self.travel_planner.parse_travel_request(function_params["prompt"])
-        elif function_name == "plan_trip":
-            result = self.travel_planner.plan_trip(function_params["travel_request"])
-        # Add other function calls here
+        if function_name == "plan_trip":
+            result = await self.travel_planner.plan_trip(function_params["travel_request"])
+        elif function_name == "search_flights":
+            if all(key in function_params for key in ["origin", "destination", "departure_date"]):
+                result = await self.travel_planner._search_flights(function_params)
+            else:
+                logger.error(f"Missing required parameters for search_flights: {function_params}")
+                result = "Missing required parameters for flight search"
         else:
             logger.warning(f"Unknown function call: {function_name}")
-            result = {}
+            result = f"Unknown function: {function_name}"
         
         logger.info(f"Function {function_name} returned: {result}")
         return result

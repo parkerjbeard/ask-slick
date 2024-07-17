@@ -1,7 +1,7 @@
 import datetime
 from typing import List, Dict, Optional
 from database.db_manager import DatabaseManager
-from app.openai_client import OpenAIClient
+from app.openai_helper import OpenAIClient
 
 class TaskManager:
     def __init__(self, db_manager: DatabaseManager, openai_client: OpenAIClient):

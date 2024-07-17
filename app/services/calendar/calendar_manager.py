@@ -1,7 +1,7 @@
 import datetime
 from typing import List, Dict, Optional
 from app.google_client import GoogleClient
-from app.openai_client import OpenAIClient
+from app.openai_helper import OpenAIClient
 
 class CalendarAssistant:
     def __init__(self, google_client: GoogleClient, openai_client: OpenAIClient):

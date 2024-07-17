@@ -1,5 +1,6 @@
 import os
 from openai import OpenAI
+import json
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 from typing import List, Dict, Any
@@ -106,3 +107,15 @@ class OpenAIClient:
         ]
         response = self._create_chat_completion(messages)
         return response['message'].strip().lower()
+    
+    def extract_travel_request(self, unstructured_text: str) -> Dict[str, Any]:
+        """
+        Extract structured travel request data from unstructured text.
+        """
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that extracts structured travel request data from unstructured text."},
+            {"role": "user", "content": f"Extract the travel request details from the following text:\n\n{unstructured_text}"}
+        ]
+        response = self._create_chat_completion(messages)
+        return response['message'].strip().lower()
+

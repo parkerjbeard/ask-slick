@@ -27,7 +27,7 @@ class FlightSearch:
             "show_hidden": "false"
         }
 
-    def search_flights(self, origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, **kwargs) -> str:
+    def search_flights(self, origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, adults: str = "1", travel_class: str = "1", **kwargs) -> str:
         """
         Search for flights using the SerpAPI Google Flights API with advanced options.
         """
