@@ -17,15 +17,10 @@ async def update_assistants():
     
     assistants = await assistant_manager.list_assistants()
     
-    for assistant_name in ["TravelAssistant", "EmailAssistant", "GeneralAssistant", "ClassifierAssistant"]:
+    for assistant_name in ["TravelAssistant", "EmailAssistant", "GeneralAssistant", "ClassifierAssistant", "ScheduleAssistant", "FamilyAssistant", "TodoAssistant", "DocumentAssistant"]:
         assistant_id = assistants.get(assistant_name)
         tools, model = assistant_factory.get_tools_for_assistant(assistant_name)
-        instructions = f"You are a {assistant_name}."
-        
-        if assistant_name == "ClassifierAssistant":
-            instructions = """You are a ClassifierAssistant. Your job is to classify user messages into predefined categories. 
-            Pay close attention to the context of the conversation and the current message. 
-            Your output should always be a single word from the given categories."""
+        instructions = assistant_factory.get_assistant_instructions(assistant_name)
         
         if assistant_id:
             await assistant_manager.update_assistant(

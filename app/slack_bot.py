@@ -5,6 +5,7 @@ from app.assistants.assistant_manager import AssistantManager
 from app.assistants.dispatcher import Dispatcher
 from app.services.travel.travel_planner import TravelPlanner
 from utils.logger import logger
+from utils.md_remover import remove_markdown
 
 def create_slack_bot(travel_planner: TravelPlanner):
     logger.debug("Creating Slack bot")
@@ -100,7 +101,62 @@ async def handle_tool_call(tool_call, travel_planner):
 
 async def send_slack_response(say, assistant_response, tool_responses, channel):
     logger.debug(f"Sending Slack response - Channel: {channel}, Response: {assistant_response}")
-    await say(text=assistant_response, channel=channel)
+    
+    # Format the response for Slack
+    slack_formatted_response = format_for_slack(assistant_response)
+    
+    await say(text=slack_formatted_response, channel=channel)
     if tool_responses:
         logger.debug(f"Sending tool responses: {tool_responses}")
-        await say(text=str(tool_responses), channel=channel)
+        slack_formatted_tool_responses = format_for_slack(str(tool_responses))
+        await say(text=slack_formatted_tool_responses, channel=channel)
+
+def format_for_slack(text):
+    lines = text.split('\n')
+    formatted_lines = []
+    in_list = False
+    list_indent = 0
+
+    for line in lines:
+        stripped_line = line.strip()
+        
+        # Handle headers
+        if stripped_line.startswith(('#', '##', '###')):
+            level = stripped_line.count('#')
+            header_text = stripped_line.lstrip('#').strip()
+            if level == 1:
+                formatted_lines.append(f"\n*{header_text.upper()}*\n{'=' * len(header_text)}")
+            else:
+                formatted_lines.append(f"\n*{header_text}*\n{'-' * len(header_text)}")
+            in_list = False
+            continue
+
+        # Handle list items
+        if stripped_line.startswith(('- ', '* ', '+ ')) or (stripped_line[:1].isdigit() and stripped_line[1:3] in ('. ', ') ')):
+            if not in_list:
+                in_list = True
+                list_indent = line.index(stripped_line[0])
+            indent = ' ' * (line.index(stripped_line[0]) - list_indent)
+            list_item = stripped_line[2:] if stripped_line[1] in (' ', '.', ')') else stripped_line
+            formatted_lines.append(f"{indent}• {list_item}")
+            continue
+
+        # Handle regular text
+        if stripped_line:
+            if in_list and not line.startswith(' ' * list_indent):
+                in_list = False
+            formatted_lines.append(line)
+        else:
+            in_list = False
+            formatted_lines.append(line)
+
+    # Join lines and add some final formatting
+    formatted_text = '\n'.join(formatted_lines)
+    
+    # Bold important terms
+    formatted_text = formatted_text.replace('**', '*')
+    
+    # Remove extra newlines
+    formatted_text = '\n'.join(line for line in formatted_text.split('\n') if line.strip())
+
+    return formatted_text

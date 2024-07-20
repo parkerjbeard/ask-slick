@@ -34,8 +34,7 @@ class Dispatcher:
                 if "error" in travel_structured_data:
                     return {'thread_id': None, 'run_id': None, 'error': travel_structured_data["error"]}
 
-            assistants = await self.assistant_manager.list_assistants()
-            assistant_id = assistants.get(assistant_name) or await self.create_assistant(assistant_name)
+            assistant_id = await self.assistant_manager.create_or_get_assistant(assistant_name)
 
             if not self.thread_id:
                 thread = await self.assistant_manager.create_thread()

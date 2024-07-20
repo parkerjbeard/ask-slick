@@ -3,6 +3,7 @@ import os
 import time
 from openai import OpenAI
 from utils.logger import logger
+from app.assistants.assistant_factory import AssistantFactory
 
 class AssistantManager:
     """A class to manage OpenAI assistants and threads."""
@@ -26,6 +27,24 @@ class AssistantManager:
             model=model
         )
 
+    async def create_or_get_assistant(self, name: str) -> str:
+        assistants = await self.list_assistants()
+        assistant_id = assistants.get(name)
+
+        if assistant_id:
+            return assistant_id
+
+        tools, model = AssistantFactory.get_tools_for_assistant(name)
+        instructions = AssistantFactory.get_assistant_instructions(name)
+
+        assistant = await self.create_assistant(
+            name=name,
+            instructions=instructions,
+            tools=tools,
+            model=model
+        )
+        return assistant.id
+        
     async def update_assistant(self, assistant_id: str, name: Optional[str] = None, 
                                description: Optional[str] = None, instructions: Optional[str] = None, 
                                tools: Optional[List[Dict[str, Any]]] = None) -> Any:
