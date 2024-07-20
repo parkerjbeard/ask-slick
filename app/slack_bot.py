@@ -45,28 +45,27 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
 
         if function_output:
             await send_slack_response(say, function_output, None, channel)
+
+        run = assistant_manager.wait_on_run(thread_id, run_id)
+
+        while run.status == "requires_action":
+            tool_calls = run.required_action.submit_tool_outputs.tool_calls
+            tool_outputs = [
+                {
+                    "tool_call_id": tool_call.id,
+                    "output": await handle_tool_call(tool_call, travel_planner)
+                }
+                for tool_call in tool_calls
+            ]
+            run = await assistant_manager.submit_tool_outputs(thread_id, run_id, tool_outputs)
+
+        messages = await assistant_manager.get_assistant_response(thread_id, run_id)
+
+        if messages.data:
+            assistant_response = messages.data[-1].content[0].text.value
+            await send_slack_response(say, assistant_response, None, channel)
         else:
-            run = assistant_manager.wait_on_run(thread_id, run_id)
-
-            if run.required_action is not None and run.required_action.type == "submit_tool_outputs":
-                tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                tool_outputs = [
-                    {
-                        "tool_call_id": tool_call.id,
-                        "output": await handle_tool_call(tool_call, travel_planner)
-                    }
-                    for tool_call in tool_calls
-                ]
-                run = assistant_manager.wait_on_run(thread_id, run_id)
-
-            run = assistant_manager.wait_on_run(thread_id, run_id)
-            messages = await assistant_manager.get_response(thread_id)
-
-            if messages.data:
-                assistant_response = messages.data[-1].content[0].text.value
-                await send_slack_response(say, assistant_response, None, channel)
-            else:
-                await say(text="I'm sorry, but I couldn't generate a response. Please try again.", channel=channel)
+            await say(text="I'm sorry, but I couldn't generate a response. Please try again.", channel=channel)
 
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}", exc_info=True)
@@ -77,7 +76,9 @@ async def handle_tool_call(tool_call, travel_planner):
     function_args = json.loads(tool_call.function.arguments)
     
     if function_name == "search_flights":
-        result = await travel_planner._search_flights(**function_args)
+        result = await travel_planner._search_flights(function_args)
+    elif function_name == "search_hotels":
+        result = await travel_planner._search_hotels(function_args)
     elif function_name == "plan_trip":
         result = await travel_planner.plan_trip(function_args["travel_request"])
     else:

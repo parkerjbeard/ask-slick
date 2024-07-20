@@ -10,10 +10,53 @@ class Dispatcher:
         self.assistant_manager = AssistantManager()
         self.openai_client = OpenAIClient()
         self.travel_planner = TravelPlanner()
+        self.thread_id = None
+        self.classifier_assistant_id = None
+
+    async def initialize(self):
+        assistants = await self.assistant_manager.list_assistants()
+        self.classifier_assistant_id = assistants.get("ClassifierAssistant")
+        if not self.classifier_assistant_id:
+            raise ValueError("ClassifierAssistant not found. Please run update_assistants() first.")
+
+    async def classify_message(self, user_input):
+
+        if not self.classifier_assistant_id:
+            await self.initialize()
+
+        if not self.thread_id:
+            thread = await self.assistant_manager.create_thread()
+            self.thread_id = thread.id
+
+        # Add user message to the thread
+        await self.assistant_manager.create_message(self.thread_id, "user", user_input)
+
+        # Get the last few messages for context
+        messages = await self.assistant_manager.list_messages(self.thread_id, order="desc", limit=5)
+        context = "\n".join([f"{msg.role}: {msg.content[0].text.value}" for msg in reversed(messages.data)])
+
+        instructions = f"""Classify the last user message into one of these categories: schedule, family, travel, todo, document.
+        Consider the context of the conversation:
+        
+        {context}
+        
+        Your response should be a single word (the category)."""
+
+        run = await self.assistant_manager.create_run(
+            thread_id=self.thread_id,
+            assistant_id=self.classifier_assistant_id,
+            instructions=instructions
+        )
+
+        # Wait for the run to complete
+        run = self.assistant_manager.wait_on_run(self.thread_id, run.id)
+        # Get the assistant's response (classification)
+        classification = await self.assistant_manager.get_assistant_response(self.thread_id, run.id)
+
+        return classification.strip().lower()
 
     async def dispatch(self, user_input):
-        categories = ["schedule", "family", "travel", "todo", "document"]
-        category = self.openai_client.classify_text(user_input, categories)
+        category = await self.classify_message(user_input)
 
         assistant_name = self.get_assistant_name(category)
         
@@ -26,15 +69,21 @@ class Dispatcher:
         assistants = await self.assistant_manager.list_assistants()
         assistant_id = assistants.get(assistant_name) or await self.create_assistant(assistant_name)
 
-        thread = await self.assistant_manager.create_thread()
-        run = await self.assistant_manager.create_run(assistant_id=assistant_id, thread_id=thread.id)
+        if not self.thread_id:
+            thread = await self.assistant_manager.create_thread()
+            self.thread_id = thread.id
+        
+        # Add user message to the thread
+        await self.assistant_manager.create_message(self.thread_id, "user", user_input)
+
+        run = await self.assistant_manager.create_run(assistant_id=assistant_id, thread_id=self.thread_id)
         
         function_output = None
         if assistant_name == "TravelAssistant" and "error" not in travel_structured_data:
             function_output = await self.call_function("search_flights", travel_structured_data)
 
         return {
-            'thread_id': thread.id, 
+            'thread_id': self.thread_id, 
             'run_id': run.id, 
             'function_output': function_output
         }
@@ -137,7 +186,7 @@ class Dispatcher:
                     }
                 }
             ]
-            model = "gpt-3.5-turbo-0125"
+            model = "gpt-4o-mini"
         elif name == "EmailAssistant":
             tools = [
                 {
@@ -157,10 +206,10 @@ class Dispatcher:
                     }
                 }
             ]
-            model = "gpt-3.5-turbo-0125"
+            model = "gpt-4o-mini"
         else:
             tools = []
-            model = "gpt-3.5-turbo-0125"
+            model = "gpt-4o-mini"
 
         return tools, model
 

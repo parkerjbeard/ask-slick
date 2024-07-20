@@ -15,10 +15,15 @@ async def update_assistants():
     
     assistants = await assistant_manager.list_assistants()
     
-    for assistant_name in ["TravelAssistant", "EmailAssistant", "GeneralAssistant"]:
+    for assistant_name in ["TravelAssistant", "EmailAssistant", "GeneralAssistant", "ClassifierAssistant"]:
         assistant_id = assistants.get(assistant_name)
         tools, model = dispatcher.get_tools_for_assistant(assistant_name)
         instructions = f"You are a {assistant_name}."
+        
+        if assistant_name == "ClassifierAssistant":
+            instructions = """You are a ClassifierAssistant. Your job is to classify user messages into predefined categories. 
+            Pay close attention to the context of the conversation and the current message. 
+            Your output should always be a single word from the given categories."""
         
         if assistant_id:
             await assistant_manager.update_assistant(
@@ -29,12 +34,14 @@ async def update_assistants():
             logger.info(f"Updated {assistant_name} with new tools and instructions")
         else:
             logger.info(f"{assistant_name} not found, creating a new one")
-            await assistant_manager.create_assistant(
+            new_assistant = await assistant_manager.create_assistant(
                 name=assistant_name,
                 instructions=instructions,
                 tools=tools,
                 model=model
             )
+            if assistant_name == "ClassifierAssistant":
+                dispatcher.classifier_assistant_id = new_assistant.id
 
 async def setup():
     # Update assistants

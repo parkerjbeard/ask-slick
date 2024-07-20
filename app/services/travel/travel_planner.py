@@ -22,11 +22,12 @@ class TravelPlanner:
         parse_prompt = (
             "Parse the following travel request into a JSON format with keys: "
             "origin, destination, departure_date, return_date, check_in, check_out. "
+            "Given the context, if no origin was provided, the orgin is none. If an origin is provided, "
+            "the origin is the provided origin. "
             "For origin and destination, provide the 3-letter airport code. "
             "If any information is missing, use null as the value. "
             "For date ranges like 'this weekend', use the range in the check_in and check_out fields. "
             "For specific days like 'Tuesday' or 'Friday', use those as departure_date and return_date. "
-            "You have already been given a default departure origin if one was not provided. If one was provided, this is the new departure origin. "
             f"Travel request: {prompt}"
         )
         response = self.openai_client.extract_travel_request(parse_prompt)
@@ -42,6 +43,9 @@ class TravelPlanner:
             parsed_request = json.loads(response_text)
         except json.JSONDecodeError:
             return {"error": "Failed to parse travel request. Please provide more details."}
+
+        if parsed_request.get("origin") is None or parsed_request.get("origin").lower() == "none":
+            parsed_request["origin"] = self.default_origin
 
         self._process_dates(parsed_request)
         self._normalize_airport_codes(parsed_request)
@@ -106,30 +110,30 @@ class TravelPlanner:
 
         return response.strip(), flights
 
-    async def _search_hotels(self, hotel_params: dict) -> str:
-        """Search for hotels based on the provided parameters."""
-        if all(key in hotel_params for key in ["location", "check_in_date", "check_out_date"]):
+    async def _search_hotels(self, travel_request: dict) -> Tuple[str, List[Any]]:
+        """Search for hotels based on the travel request."""
+        if travel_request.get("destination") and travel_request.get("check_in") and travel_request.get("check_out"):
             hotels = self.hotel_search.search_hotels(
-                location=hotel_params["location"],
-                check_in_date=hotel_params["check_in_date"],
-                check_out_date=hotel_params["check_out_date"],
-                adults=hotel_params.get("adults", "2"),
-                children=hotel_params.get("children", "0"),
-                rating=hotel_params.get("rating", "8"),
-                currency=hotel_params.get("currency", "USD"),
-                min_price=hotel_params.get("min_price"),
-                max_price=hotel_params.get("max_price"),
-                amenities=hotel_params.get("amenities"),
-                property_types=hotel_params.get("property_types")
+                location=travel_request["destination"],
+                check_in_date=travel_request["check_in"],
+                check_out_date=travel_request["check_out"],
+                adults=travel_request.get("adults", "2"),
+                children=travel_request.get("children", "0"),
+                rating=travel_request.get("rating", "8"),
+                currency=travel_request.get("currency", "USD"),
+                min_price=travel_request.get("min_price"),
+                max_price=travel_request.get("max_price"),
+                amenities=travel_request.get("amenities"),
+                property_types=travel_request.get("property_types")
             )
-            response = f"Hotels in {hotel_params['location']} from {hotel_params['check_in_date']} to {hotel_params['check_out_date']}:\n"
+            response = f"Hotels in {travel_request['destination']} from {travel_request['check_in']} to {travel_request['check_out']}:\n"
             response += f"{hotels}\n\n"
             return response
         return "Insufficient information to search for hotels."
 
-    async def _search_flights(self, travel_request: dict) -> str:
+    async def _search_flights(self, travel_request: dict) -> Tuple[str, List[Any]]:
         """Search for flights based on the travel request."""
-        if travel_request["origin"] and travel_request["destination"] and travel_request["departure_date"]:
+        if travel_request.get("origin") and travel_request.get("destination") and travel_request.get("departure_date"):
             flights = self.flight_search.search_flights(
                 origin=travel_request["origin"],
                 destination=travel_request["destination"],

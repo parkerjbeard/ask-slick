@@ -2470,3 +2470,181 @@ TypeError: object str can't be used in 'await' expression
 2024-07-17 16:17:21,193 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
 2024-07-17 16:17:21,318 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
 2024-07-17 16:17:21,472 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:14:44,777 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:14:44,900 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:14:45,035 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:14:45,155 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:14:58,599 - slack_ai_assistant - ERROR - Error processing message: 'AssistantManager' object has no attribute 'add_message'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 38, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 35, in dispatch
+    await self.assistant_manager.add_message(self.thread_id, user_input, "user")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'AssistantManager' object has no attribute 'add_message'
+2024-07-18 17:18:51,682 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:18:51,820 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:18:51,953 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:18:51,953 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:31:55,587 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:31:55,746 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:31:55,890 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:31:55,890 - slack_ai_assistant - INFO - ClassifierAssistant not found, creating a new one
+2024-07-18 17:31:56,384 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:33:11,673 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:33:11,794 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:33:12,196 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:33:12,335 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-18 17:33:12,336 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:34:34,636 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:34:34,758 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:34:34,885 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:34:35,008 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-18 17:34:35,112 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:34:42,959 - slack_ai_assistant - ERROR - Error processing message: AssistantManager.list_messages() got an unexpected keyword argument 'limit'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 38, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 54, in dispatch
+    category = await self.classify_message(user_input)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 31, in classify_message
+    messages = await self.assistant_manager.list_messages(self.thread_id, order="desc", limit=5)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AssistantManager.list_messages() got an unexpected keyword argument 'limit'
+2024-07-18 17:38:05,376 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:38:05,496 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:38:05,634 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:38:05,769 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-18 17:38:05,880 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:38:11,599 - slack_ai_assistant - ERROR - Error processing message: AssistantManager.create_run() got an unexpected keyword argument 'instructions'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 38, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 54, in dispatch
+    category = await self.classify_message(user_input)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 35, in classify_message
+    run = await self.assistant_manager.create_run(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AssistantManager.create_run() got an unexpected keyword argument 'instructions'
+2024-07-18 17:41:42,978 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:41:43,104 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:41:43,227 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:41:43,405 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-18 17:41:43,599 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:41:49,527 - slack_ai_assistant - ERROR - Error processing message: Error code: 400 - {'error': {'message': "Invalid type for 'assistant_id': expected a string, but got null instead.", 'type': 'invalid_request_error', 'param': 'assistant_id', 'code': 'invalid_type'}}
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 38, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 55, in dispatch
+    category = await self.classify_message(user_input)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 41, in classify_message
+    run = await self.assistant_manager.create_run(
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/assistant_manager.py", line 72, in create_run
+    return self.client.beta.threads.runs.create(**run_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/openai/_utils/_utils.py", line 277, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/openai/resources/beta/threads/runs/runs.py", line 586, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/openai/_base_client.py", line 1266, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/openai/_base_client.py", line 942, in request
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/site-packages/openai/_base_client.py", line 1046, in _request
+    raise self._make_status_error_from_response(err.response) from None
+openai.BadRequestError: Error code: 400 - {'error': {'message': "Invalid type for 'assistant_id': expected a string, but got null instead.", 'type': 'invalid_request_error', 'param': 'assistant_id', 'code': 'invalid_type'}}
+2024-07-18 17:59:05,779 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 17:59:05,916 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 17:59:06,061 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 17:59:06,223 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-18 17:59:06,328 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 17:59:18,066 - slack_ai_assistant - ERROR - Error processing message: object Run can't be used in 'await' expression
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 49, in process_message_event
+    run = await assistant_manager.wait_on_run(thread_id, run_id)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: object Run can't be used in 'await' expression
+2024-07-18 18:02:22,572 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-18 18:02:22,685 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-18 18:02:22,807 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-18 18:02:22,922 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-18 18:02:23,034 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-18 18:02:52,266 - slack_ai_assistant - ERROR - Error processing message: TravelPlanner._search_flights() got an unexpected keyword argument 'origin'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 53, in process_message_event
+    tool_outputs = [
+                   ^
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 56, in <listcomp>
+    "output": await handle_tool_call(tool_call, travel_planner)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 79, in handle_tool_call
+    result = await travel_planner._search_flights(**function_args)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: TravelPlanner._search_flights() got an unexpected keyword argument 'origin'
+2024-07-19 17:24:55,284 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:24:55,490 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:24:55,675 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:24:55,851 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:24:55,973 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:25:06,555 - slack_ai_assistant - ERROR - Error processing message: Invalid dispatch result
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 44, in process_message_event
+    raise ValueError("Invalid dispatch result")
+ValueError: Invalid dispatch result
+2024-07-19 17:25:57,671 - slack_ai_assistant - ERROR - Error processing message: TravelPlanner._search_flights() got an unexpected keyword argument 'origin'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 53, in process_message_event
+    tool_outputs = [
+                   ^
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 56, in <listcomp>
+    "output": await handle_tool_call(tool_call, travel_planner)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 79, in handle_tool_call
+    result = await travel_planner._search_flights(**function_args)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: TravelPlanner._search_flights() got an unexpected keyword argument 'origin'
+2024-07-19 17:27:34,017 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:27:34,131 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:27:34,231 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:27:34,356 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:27:34,474 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:27:47,751 - slack_ai_assistant - ERROR - Error processing message: AssistantManager.get_assistant_response() missing 1 required positional argument: 'run_id'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 62, in process_message_event
+    messages = await assistant_manager.get_assistant_response(thread_id)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: AssistantManager.get_assistant_response() missing 1 required positional argument: 'run_id'
+2024-07-19 17:29:11,623 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:29:11,761 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:29:11,882 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:29:12,060 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:29:12,185 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:29:27,246 - slack_ai_assistant - ERROR - Error processing message: 'NoneType' object has no attribute 'data'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 64, in process_message_event
+    if messages.data:
+       ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'data'
+2024-07-19 17:32:11,928 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:32:12,090 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:32:12,219 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:32:12,340 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:32:12,461 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:32:36,868 - slack_ai_assistant - ERROR - Error processing message: 'NoneType' object has no attribute 'data'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 64, in process_message_event
+    if messages.data:
+       ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'data'

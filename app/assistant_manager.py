@@ -50,15 +50,26 @@ class AssistantManager:
             content=content
         )
 
-    async def list_messages(self, thread_id: str, order: str = "asc", after: Optional[str] = None) -> Any:
-        return self.client.beta.threads.messages.list(thread_id=thread_id, order=order, after=after)
+    async def list_messages(self, thread_id: str, order: str = "asc", after: Optional[str] = None, limit: Optional[int] = None) -> Any:
+        params = {
+            "thread_id": thread_id,
+            "order": order,
+        }
+        if after:
+            params["after"] = after
+        if limit:
+            params["limit"] = limit
+        return self.client.beta.threads.messages.list(**params)
 
     # Run management
-    async def create_run(self, thread_id: str, assistant_id: str) -> Any:
-        return self.client.beta.threads.runs.create(
-            thread_id=thread_id,
-            assistant_id=assistant_id
-        )
+    async def create_run(self, thread_id: str, assistant_id: str, instructions: Optional[str] = None) -> Any:
+        run_params = {
+            "thread_id": thread_id,
+            "assistant_id": assistant_id,
+        }
+        if instructions:
+            run_params["instructions"] = instructions
+        return self.client.beta.threads.runs.create(**run_params)
 
     def wait_on_run(self, thread_id: str, run_id: str) -> Any:
         run = self.client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
