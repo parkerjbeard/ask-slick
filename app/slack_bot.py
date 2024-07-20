@@ -47,6 +47,7 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
         thread_id = dispatch_result.get('thread_id')
         run_id = dispatch_result.get('run_id')
         function_outputs = dispatch_result.get('function_outputs')
+        assistant_response = dispatch_result.get('assistant_response')
         
         if not thread_id or not run_id:
             logger.error("Invalid dispatch result: missing thread_id or run_id")
@@ -60,37 +61,7 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
                 else:
                     logger.error(f"Unexpected output format: {output}")
 
-        logger.debug(f"Waiting on run - Thread ID: {thread_id}, Run ID: {run_id}")
-        run = assistant_manager.wait_on_run(thread_id, run_id)
-        logger.debug(f"Run status: {run.status}")
-
-        while run.status == "requires_action":
-            logger.debug("Run requires action")
-            tool_calls = run.required_action.submit_tool_outputs.tool_calls
-            logger.debug(f"Tool calls: {tool_calls}")
-            tool_outputs = [
-                {
-                    "tool_call_id": tool_call.id,
-                    "output": await handle_tool_call(tool_call, travel_planner)
-                }
-                for tool_call in tool_calls
-            ]
-            logger.debug(f"Submitting tool outputs: {tool_outputs}")
-            run = await assistant_manager.submit_tool_outputs(thread_id, run_id, tool_outputs)
-            logger.debug(f"Updated run status: {run.status}")
-
-        logger.debug("Getting assistant response")
-        messages = await assistant_manager.get_assistant_response(thread_id, run_id)
-        logger.debug(f"Received messages: {messages}")
-
-        if messages is None:
-            logger.error("No messages received from assistant_manager.get_assistant_response")
-            await say(text="I'm sorry, but I couldn't generate a response. Please try again.", channel=channel)
-        elif not hasattr(messages, 'data') or not messages.data:
-            logger.warning("Messages object has no data attribute or data is empty")
-            await say(text="I'm sorry, but I couldn't generate a response. Please try again.", channel=channel)
-        else:
-            assistant_response = messages.data[-1].content[0].text.value
+        if assistant_response:
             logger.debug(f"Assistant response: {assistant_response}")
             await send_slack_response(say, assistant_response, None, channel)
 

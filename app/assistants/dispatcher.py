@@ -38,15 +38,24 @@ class Dispatcher:
 
         run = await self.assistant_manager.create_run(assistant_id=assistant_id, thread_id=self.thread_id)
         
-        function_outputs = None
-        if assistant_name == "TravelAssistant" and "error" not in travel_structured_data:
-            function_outputs = await self.call_functions(travel_structured_data)
+        # Wait for the assistant's response
+        run = self.assistant_manager.wait_on_run(self.thread_id, run.id)
+        assistant_response = await self.assistant_manager.get_assistant_response(self.thread_id, run.id)
 
-        return {
-            'thread_id': self.thread_id, 
-            'run_id': run.id, 
-            'function_outputs': function_outputs
-        }
+        # Check if the response requires a function call
+        if assistant_name == "TravelAssistant" and "function_call" in assistant_response:
+            function_outputs = await self.call_functions(travel_structured_data)
+            return {
+                'thread_id': self.thread_id, 
+                'run_id': run.id, 
+                'function_outputs': function_outputs
+            }
+        else:
+            return {
+                'thread_id': self.thread_id, 
+                'run_id': run.id, 
+                'assistant_response': assistant_response
+            }
 
     async def call_functions(self, travel_structured_data: dict) -> list:
         tools = AssistantFactory.get_tools_for_assistant("TravelAssistant")[0]
@@ -85,8 +94,6 @@ class Dispatcher:
         return function_outputs
 
     async def call_function(self, function_name: str, function_params: dict) -> str:
-        # if function_name == "plan_trip":
-        #     return await self.travel_planner.plan_trip(function_params["travel_request"])
         if function_name == "search_flights":
             if all(key in function_params for key in ["origin", "destination", "departure_date"]):
                 return await self.travel_planner._search_flights(function_params)
