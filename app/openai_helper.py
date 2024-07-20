@@ -1,12 +1,13 @@
 import os
 from openai import OpenAI
 from typing import List, Dict, Any
+from utils.logger import logger
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class OpenAIClient:
     def __init__(self):
-        self.model = "gpt-3.5-turbo"
+        self.model = "gpt-4o-mini"
 
     def _create_chat_completion(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         response = client.chat.completions.create(model=self.model, messages=messages)
@@ -78,9 +79,18 @@ class OpenAIClient:
         ]
         return self._create_chat_completion(messages)["message"].strip().lower()
     
-    def extract_travel_request(self, unstructured_text: str) -> Dict[str, Any]:
+    def extract_travel_request(self, unstructured_text: str, chat_history: List[str]) -> str:
+        context = "\n".join(chat_history[-10:])
         messages = [
-            {"role": "system", "content": "You are a helpful assistant that extracts structured travel request data from unstructured text."},
-            {"role": "user", "content": f"Extract the travel request details from the following text:\n\n{unstructured_text}"}
+            {"role": "system", "content": "You are a helpful assistant that extracts structured travel request data from unstructured text. Always respond with a valid JSON object without any Markdown formatting."},
+            {"role": "user", "content": f"""Extract the travel request details from the following text, considering the chat history for context. Respond with a JSON object containing the keys: origin, destination, departure_date, return_date, check_in, check_out. Use null for any missing values. Do not use Markdown formatting in your response.
+
+            Chat history:
+            {context}
+
+            Travel request: {unstructured_text}
+            """}
         ]
-        return self._create_chat_completion(messages)["message"]
+        response = self._create_chat_completion(messages)
+        logger.debug(f"OpenAI response for travel request extraction: {response}")
+        return response["message"]

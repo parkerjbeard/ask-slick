@@ -7,6 +7,8 @@ from .search_flight import create_flight_search
 from .search_hotel import create_hotel_search
 from utils.dates_format import parse_date, get_weekend_dates, get_next_weekday
 from app.openai_helper import OpenAIClient
+from utils.logger import logger
+import re
 
 class TravelPlanner:
     def __init__(self):
@@ -18,11 +20,11 @@ class TravelPlanner:
         self.hotel_search = create_hotel_search()
         self.openai_client = OpenAIClient()
 
-    def parse_travel_request(self, prompt: str) -> Dict[str, Any]:
+    def parse_travel_request(self, prompt: str, chat_history: List[str]) -> Dict[str, Any]:
         parse_prompt = (
             "Parse the following travel request into a JSON format with keys: "
             "origin, destination, departure_date, return_date, check_in, check_out. "
-            "Given the context, if no origin was provided, the orgin is none. If an origin is provided, "
+            "Given the context, if no origin was provided, the origin is none. If an origin is provided, "
             "the origin is the provided origin. "
             "For origin and destination, provide the 3-letter airport code. "
             "If any information is missing, use null as the value. "
@@ -30,31 +32,46 @@ class TravelPlanner:
             "For specific days like 'Tuesday' or 'Friday', use those as departure_date and return_date. "
             f"Travel request: {prompt}"
         )
-        response = self.openai_client.extract_travel_request(parse_prompt)
+        logger.debug(f"Extracting travel request with prompt: {parse_prompt}")
+        logger.debug(f"Chat history: {chat_history}")
+        
+        try:
+            response = self.openai_client.extract_travel_request(parse_prompt, chat_history)
+            logger.debug(f"Raw extracted travel request: {response}")
+        except Exception as e:
+            logger.error(f"Error in OpenAI extraction: {str(e)}", exc_info=True)
+            return {"error": f"Failed to extract travel request: {str(e)}"}
         
         if isinstance(response, dict) and 'message' in response:
             response_text = response['message']
         elif isinstance(response, str):
             response_text = response
         else:
+            logger.error(f"Unexpected response format: {response}")
             return {"error": "Failed to parse travel request. Unexpected response format."}
+
+        logger.debug(f"Response text before JSON parsing: {response_text}")
+        
+        if not response_text.strip():
+            logger.error("Empty response text")
+            return {"error": "Failed to parse travel request. Empty response from OpenAI."}
+
+        # Remove Markdown code block syntax if present
+        response_text = re.sub(r'^```json\s*|\s*```$', '', response_text.strip())
 
         try:
             parsed_request = json.loads(response_text)
-        except json.JSONDecodeError:
-            return {"error": "Failed to parse travel request. Please provide more details."}
-
-        if parsed_request.get("origin") is None or parsed_request.get("origin").lower() == "none":
-            parsed_request["origin"] = self.default_origin
-
-        self._process_dates(parsed_request)
-        self._normalize_airport_codes(parsed_request)
-
-        required_keys = ["origin", "destination", "departure_date", "return_date", "check_in", "check_out"]
-        if not all(key in parsed_request for key in required_keys):
-            return {"error": "Failed to parse travel request. Please provide more details."}
-
-        return parsed_request
+            logger.debug(f"Parsed JSON request: {parsed_request}")
+            
+            # Process dates and normalize airport codes
+            self._process_dates(parsed_request)
+            self._normalize_airport_codes(parsed_request)
+            
+            return parsed_request
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON decode error: {str(e)}", exc_info=True)
+            logger.error(f"Failed JSON string: {response_text}")
+            return {"error": f"Failed to parse travel request. JSON error: {str(e)}"}
 
     def _process_dates(self, parsed_request: Dict[str, Any]) -> None:
         departure_date = None
@@ -133,6 +150,7 @@ class TravelPlanner:
 
     async def _search_flights(self, travel_request: dict) -> Tuple[str, List[Any]]:
         """Search for flights based on the travel request."""
+        logger.debug(f"Searching flights with parameters: {travel_request}")
         if travel_request.get("origin") and travel_request.get("destination") and travel_request.get("departure_date"):
             flights = self.flight_search.search_flights(
                 origin=travel_request["origin"],

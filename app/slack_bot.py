@@ -44,6 +44,12 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
         logger.debug("Dispatching message")
         dispatch_result = await dispatcher.dispatch(text.lower())
         logger.debug(f"Dispatch result: {dispatch_result}")
+        
+        if 'error' in dispatch_result:
+            logger.error(f"Error in dispatch result: {dispatch_result['error']}")
+            await say(text=f"I'm sorry, but I encountered an error: {dispatch_result['error']}", channel=channel)
+            return
+
         thread_id = dispatch_result.get('thread_id')
         run_id = dispatch_result.get('run_id')
         function_outputs = dispatch_result.get('function_outputs')
@@ -51,7 +57,8 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
         
         if not thread_id or not run_id:
             logger.error("Invalid dispatch result: missing thread_id or run_id")
-            raise ValueError("Invalid dispatch result")
+            await say(text="I'm sorry, but I encountered an error while processing your request. Please try again later.", channel=channel)
+            return
 
         if function_outputs:
             logger.debug(f"Sending function outputs: {function_outputs}")
@@ -64,6 +71,9 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
         if assistant_response:
             logger.debug(f"Assistant response: {assistant_response}")
             await send_slack_response(say, assistant_response, None, channel)
+        else:
+            logger.warning("No assistant response received")
+            await say(text="I'm sorry, but I couldn't generate a response. Please try again.", channel=channel)
 
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}", exc_info=True)

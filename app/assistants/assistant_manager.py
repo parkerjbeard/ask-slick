@@ -51,6 +51,9 @@ class AssistantManager:
             content=content
         )
     
+    async def list_runs(self, thread_id: str) -> Any:
+        return self.client.beta.threads.runs.list(thread_id=thread_id)
+
     async def list_messages(self, thread_id: str, order: str = "asc", after: Optional[str] = None, limit: Optional[int] = None) -> Any:
         params = {
             "thread_id": thread_id,
@@ -75,11 +78,18 @@ class AssistantManager:
         return self.client.beta.threads.runs.create(**run_params)
 
     def wait_on_run(self, thread_id: str, run_id: str) -> Any:
-        run = self.client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
-        while run.status in ["queued", "in_progress"]:
-            time.sleep(0.5)
-            run = self.client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
-        return run
+        while True:
+            try:
+                run = self.client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+                if run.status in ["completed", "requires_action"]:
+                    return run
+                elif run.status in ["failed", "cancelled", "expired"]:
+                    logger.error(f"Run failed with status: {run.status}")
+                    raise Exception(f"Run failed with status: {run.status}")
+                time.sleep(0.5)
+            except Exception as e:
+                logger.error(f"Error retrieving run status: {str(e)}")
+                raise
 
     async def submit_tool_outputs(self, thread_id: str, run_id: str, tool_outputs: List[Dict[str, Any]]) -> Any:
         return self.client.beta.threads.runs.submit_tool_outputs(
@@ -95,9 +105,13 @@ class AssistantManager:
 
     async def get_assistant_response(self, thread_id: str, run_id: str) -> Optional[str]:
         messages = await self.list_messages(thread_id)
+        logger.debug(f"Messages: {messages}")
         for message in messages.data:
+            logger.debug(f"Checking message - Role: {message.role}, Run ID: {message.run_id}")
             if message.role == "assistant" and message.run_id == run_id:
-                return message.content[0].text.value
+                if message.content and len(message.content) > 0:
+                    return message.content[0].text.value
+        logger.warning(f"No assistant response found for run_id: {run_id}")
         return None
 
     async def create_thread_and_run(self, assistant_id: str, user_input: str) -> tuple:
