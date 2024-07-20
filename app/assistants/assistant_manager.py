@@ -2,6 +2,7 @@ from typing import Optional, List, Dict, Any
 import os
 import time
 from openai import OpenAI
+from utils.logger import logger
 
 class AssistantManager:
     """A class to manage OpenAI assistants and threads."""
@@ -49,7 +50,7 @@ class AssistantManager:
             role=role,
             content=content
         )
-
+    
     async def list_messages(self, thread_id: str, order: str = "asc", after: Optional[str] = None, limit: Optional[int] = None) -> Any:
         params = {
             "thread_id": thread_id,
@@ -59,8 +60,10 @@ class AssistantManager:
             params["after"] = after
         if limit:
             params["limit"] = limit
-        return self.client.beta.threads.messages.list(**params)
-
+        response = self.client.beta.threads.messages.list(**params)
+        logger.debug(f"List messages response: {response}")
+        return response
+    
     # Run management
     async def create_run(self, thread_id: str, assistant_id: str, instructions: Optional[str] = None) -> Any:
         run_params = {

@@ -2648,3 +2648,407 @@ Traceback (most recent call last):
     if messages.data:
        ^^^^^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'data'
+2024-07-19 17:36:18,530 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:36:18,683 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:36:18,842 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:36:18,966 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:36:18,966 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:36:19,085 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:36:19,085 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:36:24,989 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721435784.469639', 'client_msg_id': '62c4ccf4-d376-4afd-9de1-ec1145b0195e', 'text': 'find me a hotel in nashville august 6 through august 9', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': '68IOd', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'find me a hotel in nashville august 6 through august 9'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721435784.469639', 'channel_type': 'channel'}
+2024-07-19 17:36:24,990 - slack_ai_assistant - DEBUG - Processing message event - Text: find me a hotel in nashville august 6 through august 9, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:36:24,990 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:36:28,678 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_GVwyEwkU7MXdJW9RYYeLTBcd', 'run_id': 'run_mwYpXn06KrklKciXioJjlMIi', 'function_output': 'Flights from LAX to BNA on 2024-08-06:\nFlight 1 - $131 - 1 stop(s):\nSpirit - Los Angeles International Airport (LAX) to Harry Reid International Airport (LAS) - 08-06 05:50 - 1h 20m\nSpirit - Harry Reid International Airport (LAS) to Nashville International Airport (BNA) - 08-06 08:10 - 3h 43m\n\nFlight 2 - $133 - 0 stop(s):\nSpirit - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 22:05 - 4h 3m\n\nFlight 3 - $280 - 0 stop(s):\nDelta - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 06:50 - 4h 6m\n\nFlight 4 - $280 - 0 stop(s):\nAmerican - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 07:30 - 4h 4m\n\n'}
+2024-07-19 17:36:28,678 - slack_ai_assistant - DEBUG - Sending function output: Flights from LAX to BNA on 2024-08-06:
+Flight 1 - $131 - 1 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Harry Reid International Airport (LAS) - 08-06 05:50 - 1h 20m
+Spirit - Harry Reid International Airport (LAS) to Nashville International Airport (BNA) - 08-06 08:10 - 3h 43m
+
+Flight 2 - $133 - 0 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 22:05 - 4h 3m
+
+Flight 3 - $280 - 0 stop(s):
+Delta - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 06:50 - 4h 6m
+
+Flight 4 - $280 - 0 stop(s):
+American - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 07:30 - 4h 4m
+
+
+2024-07-19 17:36:28,678 - slack_ai_assistant - DEBUG - Sending Slack response - Channel: C07A869GUDT, Response: Flights from LAX to BNA on 2024-08-06:
+Flight 1 - $131 - 1 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Harry Reid International Airport (LAS) - 08-06 05:50 - 1h 20m
+Spirit - Harry Reid International Airport (LAS) to Nashville International Airport (BNA) - 08-06 08:10 - 3h 43m
+
+Flight 2 - $133 - 0 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 22:05 - 4h 3m
+
+Flight 3 - $280 - 0 stop(s):
+Delta - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 06:50 - 4h 6m
+
+Flight 4 - $280 - 0 stop(s):
+American - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 07:30 - 4h 4m
+
+
+2024-07-19 17:36:28,941 - slack_ai_assistant - DEBUG - Waiting on run - Thread ID: thread_GVwyEwkU7MXdJW9RYYeLTBcd, Run ID: run_mwYpXn06KrklKciXioJjlMIi
+2024-07-19 17:36:30,369 - slack_ai_assistant - DEBUG - Run requires action
+2024-07-19 17:36:30,369 - slack_ai_assistant - DEBUG - Tool calls: [RequiredActionFunctionToolCall(id='call_YfGC4ehcqN2S6YnBGjUJQpaD', function=Function(arguments='{"location":"Nashville","check_in_date":"2023-08-06","check_out_date":"2023-08-09"}', name='search_hotels'), type='function')]
+2024-07-19 17:36:30,369 - slack_ai_assistant - DEBUG - Handling tool call - Function: search_hotels, Arguments: {'location': 'Nashville', 'check_in_date': '2023-08-06', 'check_out_date': '2023-08-09'}
+2024-07-19 17:36:30,370 - slack_ai_assistant - DEBUG - Tool call result: Insufficient information to search for hotels.
+2024-07-19 17:36:30,370 - slack_ai_assistant - DEBUG - Submitting tool outputs: [{'tool_call_id': 'call_YfGC4ehcqN2S6YnBGjUJQpaD', 'output': '"Insufficient information to search for hotels."'}]
+2024-07-19 17:36:31,153 - slack_ai_assistant - DEBUG - Getting assistant response
+2024-07-19 17:36:31,272 - slack_ai_assistant - ERROR - Error processing message: 'NoneType' object has no attribute 'data'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 79, in process_message_event
+    if messages.data:
+       ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'data'
+2024-07-19 17:37:06,793 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:37:06,957 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:37:07,094 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:37:07,207 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:37:07,207 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:37:07,318 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:37:07,318 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:37:15,069 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721435834.534079', 'client_msg_id': '8e90e980-96bc-41dc-9bf6-17225f0d006d', 'text': 'find me a hotel in nashville august 6 through august 9', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': '68IOd', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'find me a hotel in nashville august 6 through august 9'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721435834.534079', 'channel_type': 'channel'}
+2024-07-19 17:37:15,070 - slack_ai_assistant - DEBUG - Processing message event - Text: find me a hotel in nashville august 6 through august 9, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:37:15,070 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:37:20,765 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_cSOziDu9zN2PvYzfeSt2r2ky', 'run_id': 'run_fpzF6oLrS36PqCcUSJrw6JRx', 'function_output': 'Flights from LAX to BNA on 2024-08-06:\nFlight 1 - $131 - 1 stop(s):\nSpirit - Los Angeles International Airport (LAX) to Harry Reid International Airport (LAS) - 08-06 05:50 - 1h 20m\nSpirit - Harry Reid International Airport (LAS) to Nashville International Airport (BNA) - 08-06 08:10 - 3h 43m\n\nFlight 2 - $133 - 0 stop(s):\nSpirit - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 22:05 - 4h 3m\n\nFlight 3 - $280 - 0 stop(s):\nDelta - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 06:50 - 4h 6m\n\nFlight 4 - $280 - 0 stop(s):\nAmerican - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 07:30 - 4h 4m\n\n'}
+2024-07-19 17:37:20,765 - slack_ai_assistant - DEBUG - Sending function output: Flights from LAX to BNA on 2024-08-06:
+Flight 1 - $131 - 1 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Harry Reid International Airport (LAS) - 08-06 05:50 - 1h 20m
+Spirit - Harry Reid International Airport (LAS) to Nashville International Airport (BNA) - 08-06 08:10 - 3h 43m
+
+Flight 2 - $133 - 0 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 22:05 - 4h 3m
+
+Flight 3 - $280 - 0 stop(s):
+Delta - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 06:50 - 4h 6m
+
+Flight 4 - $280 - 0 stop(s):
+American - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 07:30 - 4h 4m
+
+
+2024-07-19 17:37:20,765 - slack_ai_assistant - DEBUG - Sending Slack response - Channel: C07A869GUDT, Response: Flights from LAX to BNA on 2024-08-06:
+Flight 1 - $131 - 1 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Harry Reid International Airport (LAS) - 08-06 05:50 - 1h 20m
+Spirit - Harry Reid International Airport (LAS) to Nashville International Airport (BNA) - 08-06 08:10 - 3h 43m
+
+Flight 2 - $133 - 0 stop(s):
+Spirit - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 22:05 - 4h 3m
+
+Flight 3 - $280 - 0 stop(s):
+Delta - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 06:50 - 4h 6m
+
+Flight 4 - $280 - 0 stop(s):
+American - Los Angeles International Airport (LAX) to Nashville International Airport (BNA) - 08-06 07:30 - 4h 4m
+
+
+2024-07-19 17:37:21,020 - slack_ai_assistant - DEBUG - Waiting on run - Thread ID: thread_cSOziDu9zN2PvYzfeSt2r2ky, Run ID: run_fpzF6oLrS36PqCcUSJrw6JRx
+2024-07-19 17:37:22,438 - slack_ai_assistant - DEBUG - Run requires action
+2024-07-19 17:37:22,438 - slack_ai_assistant - DEBUG - Tool calls: [RequiredActionFunctionToolCall(id='call_N6CsXGqr0041QysxY2IR3igC', function=Function(arguments='{"location":"Nashville","check_in_date":"2023-08-06","check_out_date":"2023-08-09"}', name='search_hotels'), type='function')]
+2024-07-19 17:37:22,438 - slack_ai_assistant - DEBUG - Handling tool call - Function: search_hotels, Arguments: {'location': 'Nashville', 'check_in_date': '2023-08-06', 'check_out_date': '2023-08-09'}
+2024-07-19 17:37:22,438 - slack_ai_assistant - DEBUG - Tool call result: Insufficient information to search for hotels.
+2024-07-19 17:37:22,438 - slack_ai_assistant - DEBUG - Submitting tool outputs: [{'tool_call_id': 'call_N6CsXGqr0041QysxY2IR3igC', 'output': '"Insufficient information to search for hotels."'}]
+2024-07-19 17:37:22,688 - slack_ai_assistant - DEBUG - Getting assistant response
+2024-07-19 17:37:22,812 - slack_ai_assistant - ERROR - Error processing message: 'NoneType' object has no attribute 'data'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 79, in process_message_event
+    if messages.data:
+       ^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'data'
+2024-07-19 17:39:33,530 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:39:33,657 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:39:33,771 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:39:33,901 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:39:33,902 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:39:34,025 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:39:34,025 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:39:45,410 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721435984.544129', 'client_msg_id': 'ae271527-c3e4-4afe-870d-a0cdc665ccc3', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721435984.544129', 'channel_type': 'channel'}
+2024-07-19 17:39:45,411 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:39:45,411 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:39:49,384 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_lpgVd9bHEviHk5rkwob5JyqK', 'run_id': 'run_nqRdJldH1ikt2EyARBpiBKGB', 'function_output': 'Insufficient information to search for flights.'}
+2024-07-19 17:39:49,384 - slack_ai_assistant - DEBUG - Sending function output: Insufficient information to search for flights.
+2024-07-19 17:39:49,384 - slack_ai_assistant - DEBUG - Sending Slack response - Channel: C07A869GUDT, Response: Insufficient information to search for flights.
+2024-07-19 17:39:49,640 - slack_ai_assistant - DEBUG - Waiting on run - Thread ID: thread_lpgVd9bHEviHk5rkwob5JyqK, Run ID: run_nqRdJldH1ikt2EyARBpiBKGB
+2024-07-19 17:39:52,948 - slack_ai_assistant - DEBUG - Run status: completed
+2024-07-19 17:39:52,948 - slack_ai_assistant - DEBUG - Getting assistant response
+2024-07-19 17:39:53,049 - slack_ai_assistant - DEBUG - Received messages: I can help you with that. There are plenty of things to do in Nashville, also known as Music City, that cater to various interests. Some popular activities and attractions in Nashville include:
+
+1. **Visit the Country Music Hall of Fame and Museum**: Explore the history and evolution of country music through exhibits, artifacts, and interactive displays.
+
+2. **Catch a Live Music Performance**: Nashville is famous for its live music scene. Visit venues like the Grand Ole Opry, Ryman Auditorium, or bars on Broadway to enjoy performances by talented musicians.
+
+3. **Explore the Honky Tonk Highway**: Walk along Broadway and experience the vibrant atmosphere of honky-tonk bars, live music, and delicious Southern cuisine.
+
+4. **Tour the Belle Meade Plantation**: Learn about the history of this historic plantation and enjoy wine tastings at the winery on the premises.
+
+5. **Visit the Parthenon**: Nashville is home to a full-scale replica of the Parthenon in Centennial Park, complete with an art museum and Athena Parthenos statue.
+
+6. **Stroll through the Gulch**: Explore trendy shops, restaurants, and vibrant street art in the Gulch neighborhood.
+
+7. **Take a walk in Shelby Bottoms Greenway**: Enjoy outdoor activities like hiking, biking, or bird-watching in this scenic green space along the Cumberland River.
+
+8. **Shop at the Nashville Farmers' Market**: Browse fresh produce, artisanal goods, and local products at this bustling market.
+
+9. **Visit the Johnny Cash Museum**: Discover the life and legacy of the iconic musician Johnny Cash through exhibits and memorabilia.
+
+10. **Indulge in Southern Cuisine**: Don't miss the opportunity to try Nashville's famous hot chicken, barbecue, and other delicious Southern dishes at local eateries.
+
+These are just a few suggestions to get you started. Let me know if you need more information or assistance with planning your activities in Nashville.
+2024-07-19 17:39:53,049 - slack_ai_assistant - WARNING - Messages object has no data attribute or data is empty
+2024-07-19 17:51:41,906 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:51:42,081 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:51:42,196 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:51:42,322 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:51:42,322 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:51:42,429 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:51:42,430 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:51:49,779 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721436709.018029', 'client_msg_id': 'f2a73a87-83a8-4e73-8da7-f8c1ff387707', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721436709.018029', 'channel_type': 'channel'}
+2024-07-19 17:51:49,779 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:51:49,779 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:51:53,944 - slack_ai_assistant - ERROR - Error processing message: 'OpenAIClient' object has no attribute 'chat'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 45, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 83, in dispatch
+    function_outputs = await self.call_functions(travel_structured_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 131, in call_functions
+    response = await self.openai_client.chat.completions.create(
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OpenAIClient' object has no attribute 'chat'
+2024-07-19 17:53:31,010 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:53:31,127 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:53:31,244 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:53:31,372 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:53:31,373 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:53:31,624 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:53:31,625 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:53:37,653 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721436817.085309', 'client_msg_id': '35f2b563-c4af-4d7b-996d-b8c104b75612', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721436817.085309', 'channel_type': 'channel'}
+2024-07-19 17:53:37,653 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:53:37,653 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:53:41,623 - slack_ai_assistant - ERROR - Error processing message: 'OpenAIClient' object has no attribute 'chat'
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 45, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 83, in dispatch
+    function_outputs = await self.call_functions(travel_structured_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 131, in call_functions
+    response = await self.openai_client.chat.completions.create(
+                     ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'OpenAIClient' object has no attribute 'chat'
+2024-07-19 17:54:14,398 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:54:14,531 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:54:14,638 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:54:14,791 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:54:14,792 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:54:14,907 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:54:14,907 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:54:19,289 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721436858.818189', 'client_msg_id': '70bd22fe-f59b-4c60-91a1-079e8fff97a9', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721436858.818189', 'channel_type': 'channel'}
+2024-07-19 17:54:19,289 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:54:19,289 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:54:23,619 - slack_ai_assistant - ERROR - Error processing message: object ChatCompletion can't be used in 'await' expression
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 45, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 83, in dispatch
+    function_outputs = await self.call_functions(travel_structured_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/dispatcher.py", line 95, in call_functions
+    response = await self.client.chat.completions.create(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: object ChatCompletion can't be used in 'await' expression
+2024-07-19 17:54:48,183 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:54:48,312 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:54:48,430 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:54:48,544 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:54:48,545 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:54:48,657 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:54:48,657 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:54:53,930 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721436893.241449', 'client_msg_id': '690ab0f8-e1a9-48af-8447-9c00ce77641e', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721436893.241449', 'channel_type': 'channel'}
+2024-07-19 17:54:53,930 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:54:53,930 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:54:59,252 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_g5nQ1h8rF5jKiDJijjkOdNJV', 'run_id': 'run_aqf0x7kdOQTomclhMSWRz4dp', 'function_outputs': None}
+2024-07-19 17:54:59,252 - slack_ai_assistant - DEBUG - Waiting on run - Thread ID: thread_g5nQ1h8rF5jKiDJijjkOdNJV, Run ID: run_aqf0x7kdOQTomclhMSWRz4dp
+2024-07-19 17:55:00,042 - slack_ai_assistant - DEBUG - Run status: completed
+2024-07-19 17:55:00,043 - slack_ai_assistant - DEBUG - Getting assistant response
+2024-07-19 17:55:00,148 - slack_ai_assistant - DEBUG - Received messages: There are plenty of things to do in Nashville! Some popular activities and attractions in Nashville include visiting the Country Music Hall of Fame, exploring the Grand Ole Opry, strolling down Broadway for live music and entertainment, visiting the Frist Art Museum, and taking a walk in Centennial Park to see the Parthenon replica. Would you like recommendations for accommodations or flights to Nashville?
+2024-07-19 17:55:00,148 - slack_ai_assistant - WARNING - Messages object has no data attribute or data is empty
+2024-07-19 17:58:30,427 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 17:58:30,548 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 17:58:30,703 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 17:58:30,825 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 17:58:30,825 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 17:58:30,943 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 17:58:30,944 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 17:58:38,761 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721437118.021979', 'client_msg_id': '56d5db1f-cc84-4157-b250-21ed175979fe', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721437118.021979', 'channel_type': 'channel'}
+2024-07-19 17:58:38,762 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 17:58:38,762 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 17:58:43,538 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_QJw21TYwnEvJUZLZ7vvQq0Lj', 'run_id': 'run_gzjJnu6T1YIftcp0DCqCoNol', 'function_outputs': None}
+2024-07-19 17:58:43,538 - slack_ai_assistant - DEBUG - Waiting on run - Thread ID: thread_QJw21TYwnEvJUZLZ7vvQq0Lj, Run ID: run_gzjJnu6T1YIftcp0DCqCoNol
+2024-07-19 17:58:46,311 - slack_ai_assistant - DEBUG - Run status: completed
+2024-07-19 17:58:46,311 - slack_ai_assistant - DEBUG - Getting assistant response
+2024-07-19 17:58:46,436 - slack_ai_assistant - DEBUG - Received messages: Nashville, Tennessee, is known for its vibrant music scene, historic sites, and cultural attractions. Here are some things you can do in Nashville:
+
+1. **Visit the Grand Ole Opry:** Experience a live country music show at the Grand Ole Opry, one of the most famous venues in country music history.
+
+2. **Explore the Country Music Hall of Fame and Museum:** Learn about the history of country music and see exhibits featuring legendary artists.
+
+3. **Enjoy live music on Broadway:** Walk down Broadway and hop from one honky-tonk bar to another, where you can listen to live music throughout the day and night.
+
+4. **Tour the Ryman Auditorium:** Visit the historic Ryman Auditorium, known as the "Mother Church of Country Music," and take a guided tour of this iconic venue.
+
+5. **Visit the Belle Meade Plantation:** Explore the historic Belle Meade Plantation and learn about its rich history, including its thoroughbred horse farm and winery.
+
+6. **Stroll through Centennial Park:** Relax in Centennial Park and visit the full-scale replica of the Parthenon, which houses an art museum and a statue of Athena.
+
+7. **Explore the Gulch:** Wander around the Gulch neighborhood, known for its trendy shops, restaurants, and colorful murals.
+
+8. **Try hot chicken:** Nashville is famous for its hot chicken, a spicy fried chicken dish. Be sure to sample this local specialty at one of the city's hot chicken restaurants.
+
+9. **Visit the Frist Art Museum:** Explore the Frist Art Museum, housed in a former art deco post office, and view rotating exhibitions of contemporary and classical art.
+
+10. **Take a riverboat cruise:** Enjoy a leisurely riverboat cruise along the Cumberland River and see Nashville's skyline from a different perspective.
+
+If you need help planning a trip to Nashville or finding accommodation, flights, or activities, feel free to let me know!
+2024-07-19 17:58:46,436 - slack_ai_assistant - WARNING - Messages object has no data attribute or data is empty
+2024-07-19 18:03:26,639 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 18:03:26,761 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 18:03:26,868 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 18:03:26,975 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 18:03:26,975 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 18:03:27,088 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 18:03:27,089 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 18:03:33,964 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721437413.293989', 'client_msg_id': '5c24f3f0-389f-4e8e-b901-251eb847b981', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721437413.293989', 'channel_type': 'channel'}
+2024-07-19 18:03:33,965 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 18:03:33,965 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 18:03:34,517 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_bkiTO4ib5AUL9mve567sjJlN', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437414, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_sAt41BhcHEM0BYzfxp28oOnP')], object='list', first_id='msg_bkiTO4ib5AUL9mve567sjJlN', last_id='msg_bkiTO4ib5AUL9mve567sjJlN', has_more=False)
+2024-07-19 18:03:36,906 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_bkiTO4ib5AUL9mve567sjJlN', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437414, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_sAt41BhcHEM0BYzfxp28oOnP'), Message(id='msg_zDGJb1ZN2oVLAOj8zoWaCVAx', assistant_id='asst_kKzgCfGyKH7gS8gqj1o05Ovs', attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='travel'), type='text')], created_at=1721437415, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='assistant', run_id='run_79iFIvKiZ3VCqLuOxK1UHCQH', status=None, thread_id='thread_sAt41BhcHEM0BYzfxp28oOnP')], object='list', first_id='msg_bkiTO4ib5AUL9mve567sjJlN', last_id='msg_zDGJb1ZN2oVLAOj8zoWaCVAx', has_more=False)
+2024-07-19 18:03:39,751 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_6nu9wsS72MLxTF7fVHHJXFiT', 'run_id': 'run_k1DBA3q1wd6OtgL8MS59F6FA', 'function_outputs': None}
+2024-07-19 18:03:39,753 - slack_ai_assistant - DEBUG - Waiting on run - Thread ID: thread_6nu9wsS72MLxTF7fVHHJXFiT, Run ID: run_k1DBA3q1wd6OtgL8MS59F6FA
+2024-07-19 18:03:41,859 - slack_ai_assistant - DEBUG - Run status: completed
+2024-07-19 18:03:41,859 - slack_ai_assistant - DEBUG - Getting assistant response
+2024-07-19 18:03:41,985 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_3DHPwcNwdQwA5ZLng5kjQKxg', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437418, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_6nu9wsS72MLxTF7fVHHJXFiT'), Message(id='msg_N3yb3mfx2StjxLGUClwuj6j1', assistant_id='asst_LchyTrJxoG8J8nvNUnyfVkeU', attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='Nashville is a vibrant city known for its country music scene, delicious Southern cuisine, and historic landmarks. Here are some popular activities and places to visit in Nashville:\n\n1. **Country Music Hall of Fame and Museum**: Explore the history of country music and learn about legendary musicians at this iconic museum.\n\n2. **Grand Ole Opry**: Attend a live show at the Grand Ole Opry, a weekly country music stage concert that has showcased the biggest names in the industry.\n\n3. **Ryman Auditorium**: Visit the "Mother Church of Country Music" and catch a concert at this historic venue.\n\n4. **Broadway**: Stroll down Lower Broadway and enjoy live music at the many honky-tonks and bars in the area.\n\n5. **Belle Meade Plantation**: Step back in time at this historic plantation and winery, where you can learn about the Civil War and Southern history.\n\n6. **The Parthenon**: Explore a full-scale replica of the ancient Greek Parthenon, located in Centennial Park.\n\n7. **Cheekwood Estate & Gardens**: Visit this beautiful botanical garden and art museum located on the historic Cheek estate.\n\n8. **Adventure Science Center**: Perfect for families, this interactive science museum offers hands-on exhibits and educational programs.\n\n9. **Food Scene**: Indulge in Nashville\'s famous hot chicken, barbecue, and other Southern specialties at local restaurants and eateries.\n\n10. **Outdoor Activities**: Enjoy outdoor activities like hiking in Radnor Lake State Park, biking along the Nashville Greenway, or kayaking on the Cumberland River.\n\nIf you have specific interests or preferences, let me know, and I can provide more tailored recommendations for things to do in Nashville!'), type='text')], created_at=1721437419, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='assistant', run_id='run_k1DBA3q1wd6OtgL8MS59F6FA', status=None, thread_id='thread_6nu9wsS72MLxTF7fVHHJXFiT')], object='list', first_id='msg_3DHPwcNwdQwA5ZLng5kjQKxg', last_id='msg_N3yb3mfx2StjxLGUClwuj6j1', has_more=False)
+2024-07-19 18:03:41,985 - slack_ai_assistant - DEBUG - Received messages: Nashville is a vibrant city known for its country music scene, delicious Southern cuisine, and historic landmarks. Here are some popular activities and places to visit in Nashville:
+
+1. **Country Music Hall of Fame and Museum**: Explore the history of country music and learn about legendary musicians at this iconic museum.
+
+2. **Grand Ole Opry**: Attend a live show at the Grand Ole Opry, a weekly country music stage concert that has showcased the biggest names in the industry.
+
+3. **Ryman Auditorium**: Visit the "Mother Church of Country Music" and catch a concert at this historic venue.
+
+4. **Broadway**: Stroll down Lower Broadway and enjoy live music at the many honky-tonks and bars in the area.
+
+5. **Belle Meade Plantation**: Step back in time at this historic plantation and winery, where you can learn about the Civil War and Southern history.
+
+6. **The Parthenon**: Explore a full-scale replica of the ancient Greek Parthenon, located in Centennial Park.
+
+7. **Cheekwood Estate & Gardens**: Visit this beautiful botanical garden and art museum located on the historic Cheek estate.
+
+8. **Adventure Science Center**: Perfect for families, this interactive science museum offers hands-on exhibits and educational programs.
+
+9. **Food Scene**: Indulge in Nashville's famous hot chicken, barbecue, and other Southern specialties at local restaurants and eateries.
+
+10. **Outdoor Activities**: Enjoy outdoor activities like hiking in Radnor Lake State Park, biking along the Nashville Greenway, or kayaking on the Cumberland River.
+
+If you have specific interests or preferences, let me know, and I can provide more tailored recommendations for things to do in Nashville!
+2024-07-19 18:03:41,986 - slack_ai_assistant - WARNING - Messages object has no data attribute or data is empty
+2024-07-19 18:08:47,041 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 18:08:47,180 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 18:08:47,315 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 18:08:47,445 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 18:08:47,446 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 18:08:47,566 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 18:08:47,566 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 18:09:20,112 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721437759.616079', 'client_msg_id': '347ac824-0703-48aa-8d99-72f10fd3c956', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721437759.616079', 'channel_type': 'channel'}
+2024-07-19 18:09:20,129 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 18:09:20,130 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 18:09:20,671 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_1WQsK58ZDaASZvJeVn8TdO1y', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437760, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_gKY7CsjRXyIFMZzxFFjDjk8z')], object='list', first_id='msg_1WQsK58ZDaASZvJeVn8TdO1y', last_id='msg_1WQsK58ZDaASZvJeVn8TdO1y', has_more=False)
+2024-07-19 18:09:22,490 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_1WQsK58ZDaASZvJeVn8TdO1y', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437760, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_gKY7CsjRXyIFMZzxFFjDjk8z'), Message(id='msg_tFDHIgxKy3E2IkWfyiW5Fp55', assistant_id='asst_kKzgCfGyKH7gS8gqj1o05Ovs', attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='travel'), type='text')], created_at=1721437761, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='assistant', run_id='run_en9AijylDbYuqstU4mC5KMjw', status=None, thread_id='thread_gKY7CsjRXyIFMZzxFFjDjk8z')], object='list', first_id='msg_1WQsK58ZDaASZvJeVn8TdO1y', last_id='msg_tFDHIgxKy3E2IkWfyiW5Fp55', has_more=False)
+2024-07-19 18:09:24,888 - slack_ai_assistant - ERROR - Error processing message: can only concatenate str (not "coroutine") to str
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 45, in process_message_event
+    dispatch_result = await dispatcher.dispatch(text.lower())
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/assistants/dispatcher.py", line 43, in dispatch
+    function_outputs = await self.call_functions(travel_structured_data)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/assistants/dispatcher.py", line 78, in call_functions
+    result = await task
+             ^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/assistants/dispatcher.py", line 89, in call_function
+    return await self.travel_planner.plan_trip(function_params["travel_request"])
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/parkerbeard/BeardoGPT/app/services/travel/travel_planner.py", line 98, in plan_trip
+    response += hotel_response
+TypeError: can only concatenate str (not "coroutine") to str
+2024-07-19 18:10:51,840 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 18:10:51,994 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 18:10:52,105 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 18:10:52,212 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 18:10:52,212 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 18:10:52,325 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 18:10:52,325 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 18:10:57,546 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721437856.917039', 'client_msg_id': 'a4182f72-d1b4-4a8a-beaf-2169ae57f4f6', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721437856.917039', 'channel_type': 'channel'}
+2024-07-19 18:10:57,546 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 18:10:57,546 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 18:10:58,016 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_8Jfsns6nKY9lz2EFR6lKRzwA', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437857, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_KtkqPi2BXc4p6Tj9B9yI5JQB')], object='list', first_id='msg_8Jfsns6nKY9lz2EFR6lKRzwA', last_id='msg_8Jfsns6nKY9lz2EFR6lKRzwA', has_more=False)
+2024-07-19 18:10:59,759 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_8Jfsns6nKY9lz2EFR6lKRzwA', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437857, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_KtkqPi2BXc4p6Tj9B9yI5JQB'), Message(id='msg_uDrBPClx8BNsrRHa6MSyRcrA', assistant_id='asst_kKzgCfGyKH7gS8gqj1o05Ovs', attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='travel'), type='text')], created_at=1721437859, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='assistant', run_id='run_QZtr4quO7Fml2eWulOODTMuO', status=None, thread_id='thread_KtkqPi2BXc4p6Tj9B9yI5JQB')], object='list', first_id='msg_8Jfsns6nKY9lz2EFR6lKRzwA', last_id='msg_uDrBPClx8BNsrRHa6MSyRcrA', has_more=False)
+2024-07-19 18:11:05,042 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_RPgZ8BkbJaYTq7yTLLMjAJEq', 'run_id': 'run_3AwqqB0BmWXSSDCXX5T5Mr2K', 'function_outputs': ChatCompletionMessage(content="To assist you efficiently, I'll need the following additional details:\n\n1. **Flight Details:**\n   - Departure Date: (YYYY-MM-DD)\n   - Return Date: (Optional, YYYY-MM-DD)\n   - Travel Class: (e.g., Economy, Premium Economy, Business, First Class)\n   - Number of Adult Passengers:\n   - Number of Child Passengers: (Optional)\n   - Number of Infants in Seat: (Optional)\n   - Number of Infants on Lap: (Optional)\n   - Maximum Price: (Optional)\n   - Number of Stops: (e.g., Non-stop, One Stop)\n\n2. **Hotel Details:**\n   - Check-in Date: (YYYY-MM-DD)\n   - Check-out Date: (YYYY-MM-DD)\n   - Number of Adult Guests:\n   - Number of Child Guests: (Optional)\n   - Minimum Hotel Rating: (Optional)\n   - Minimum Price: (Optional)\n   - Maximum Price: (Optional)\n   - Desired Amenities: (Optional, e.g., Free WiFi, Breakfast, Pool)\n   - Property Types: (Optional, e.g., Hotel, Resort, Hostel)\n\nPlease provide the necessary details so I can proceed with the search.", role='assistant', function_call=None, tool_calls=None)}
+2024-07-19 18:11:05,042 - slack_ai_assistant - DEBUG - Sending function outputs: ChatCompletionMessage(content="To assist you efficiently, I'll need the following additional details:\n\n1. **Flight Details:**\n   - Departure Date: (YYYY-MM-DD)\n   - Return Date: (Optional, YYYY-MM-DD)\n   - Travel Class: (e.g., Economy, Premium Economy, Business, First Class)\n   - Number of Adult Passengers:\n   - Number of Child Passengers: (Optional)\n   - Number of Infants in Seat: (Optional)\n   - Number of Infants on Lap: (Optional)\n   - Maximum Price: (Optional)\n   - Number of Stops: (e.g., Non-stop, One Stop)\n\n2. **Hotel Details:**\n   - Check-in Date: (YYYY-MM-DD)\n   - Check-out Date: (YYYY-MM-DD)\n   - Number of Adult Guests:\n   - Number of Child Guests: (Optional)\n   - Minimum Hotel Rating: (Optional)\n   - Minimum Price: (Optional)\n   - Maximum Price: (Optional)\n   - Desired Amenities: (Optional, e.g., Free WiFi, Breakfast, Pool)\n   - Property Types: (Optional, e.g., Hotel, Resort, Hostel)\n\nPlease provide the necessary details so I can proceed with the search.", role='assistant', function_call=None, tool_calls=None)
+2024-07-19 18:11:05,043 - slack_ai_assistant - ERROR - Error processing message: tuple indices must be integers or slices, not str
+Traceback (most recent call last):
+  File "/Users/parkerbeard/BeardoGPT/app/slack_bot.py", line 58, in process_message_event
+    await send_slack_response(say, output['output'], None, channel)
+                                   ~~~~~~^^^^^^^^^^
+TypeError: tuple indices must be integers or slices, not str
+2024-07-19 18:12:30,905 - slack_ai_assistant - INFO - Updated TravelAssistant with new tools and instructions
+2024-07-19 18:12:31,022 - slack_ai_assistant - INFO - Updated EmailAssistant with new tools and instructions
+2024-07-19 18:12:31,349 - slack_ai_assistant - INFO - Updated GeneralAssistant with new tools and instructions
+2024-07-19 18:12:31,518 - slack_ai_assistant - INFO - Updated ClassifierAssistant with new tools and instructions
+2024-07-19 18:12:31,518 - slack_ai_assistant - DEBUG - Creating Slack bot
+2024-07-19 18:12:31,652 - slack_ai_assistant - DEBUG - Slack bot created successfully
+2024-07-19 18:12:31,652 - slack_ai_assistant - INFO - Starting the AI-Powered Personal Assistant Slack Bot
+2024-07-19 18:12:35,291 - slack_ai_assistant - DEBUG - Received message event: {'user': 'U079WGB6T0X', 'type': 'message', 'ts': '1721437954.525879', 'client_msg_id': '7a54c2c0-7bda-48b3-8902-fc89feac5182', 'text': 'what is there to do in nashville', 'team': 'T07APNY0M4Z', 'blocks': [{'type': 'rich_text', 'block_id': 'dDmpj', 'elements': [{'type': 'rich_text_section', 'elements': [{'type': 'text', 'text': 'what is there to do in nashville'}]}]}], 'channel': 'C07A869GUDT', 'event_ts': '1721437954.525879', 'channel_type': 'channel'}
+2024-07-19 18:12:35,291 - slack_ai_assistant - DEBUG - Processing message event - Text: what is there to do in nashville, User: U079WGB6T0X, Channel: C07A869GUDT
+2024-07-19 18:12:35,291 - slack_ai_assistant - DEBUG - Dispatching message
+2024-07-19 18:12:35,777 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_R65yjVtaVuPHTVZhSWX8Z5Vn', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437955, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_H6eRmeFTIFtTUagTLXpRMSso')], object='list', first_id='msg_R65yjVtaVuPHTVZhSWX8Z5Vn', last_id='msg_R65yjVtaVuPHTVZhSWX8Z5Vn', has_more=False)
+2024-07-19 18:12:37,549 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_R65yjVtaVuPHTVZhSWX8Z5Vn', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437955, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_H6eRmeFTIFtTUagTLXpRMSso'), Message(id='msg_P8a7RzIPxdwOlbtxh5BeYTUu', assistant_id='asst_kKzgCfGyKH7gS8gqj1o05Ovs', attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='travel'), type='text')], created_at=1721437956, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='assistant', run_id='run_oUz6CNQEnf23cJF6ivkQQXaa', status=None, thread_id='thread_H6eRmeFTIFtTUagTLXpRMSso')], object='list', first_id='msg_R65yjVtaVuPHTVZhSWX8Z5Vn', last_id='msg_P8a7RzIPxdwOlbtxh5BeYTUu', has_more=False)
+2024-07-19 18:12:41,014 - slack_ai_assistant - DEBUG - Dispatch result: {'thread_id': 'thread_l9NIs960gUONSC1i63XhX0QY', 'run_id': 'run_UpwHOfiJAHOmKZaKd8X16nVD', 'function_outputs': ChatCompletionMessage(content="It seems like there are missing details in your request. I need the following information to assist you:\n\n1. **Departure City** (3-letter airport code)\n2. **Departure Date** (YYYY-MM-DD format)\n3. **Return Date** (if applicable, YYYY-MM-DD format) - if this is a one-way trip, this can be omitted.\n4. **Check-in Date for Hotels** (YYYY-MM-DD format)\n5. **Check-out Date for Hotels** (YYYY-MM-DD format)\n\nPlease provide the missing details, and I'll help you find the flights and hotels.", role='assistant', function_call=None, tool_calls=None)}
+2024-07-19 18:12:41,014 - slack_ai_assistant - DEBUG - Sending function outputs: ChatCompletionMessage(content="It seems like there are missing details in your request. I need the following information to assist you:\n\n1. **Departure City** (3-letter airport code)\n2. **Departure Date** (YYYY-MM-DD format)\n3. **Return Date** (if applicable, YYYY-MM-DD format) - if this is a one-way trip, this can be omitted.\n4. **Check-in Date for Hotels** (YYYY-MM-DD format)\n5. **Check-out Date for Hotels** (YYYY-MM-DD format)\n\nPlease provide the missing details, and I'll help you find the flights and hotels.", role='assistant', function_call=None, tool_calls=None)
+2024-07-19 18:12:41,014 - slack_ai_assistant - ERROR - Unexpected output format: ('content', "It seems like there are missing details in your request. I need the following information to assist you:\n\n1. **Departure City** (3-letter airport code)\n2. **Departure Date** (YYYY-MM-DD format)\n3. **Return Date** (if applicable, YYYY-MM-DD format) - if this is a one-way trip, this can be omitted.\n4. **Check-in Date for Hotels** (YYYY-MM-DD format)\n5. **Check-out Date for Hotels** (YYYY-MM-DD format)\n\nPlease provide the missing details, and I'll help you find the flights and hotels.")
+2024-07-19 18:12:41,014 - slack_ai_assistant - ERROR - Unexpected output format: ('role', 'assistant')
+2024-07-19 18:12:41,014 - slack_ai_assistant - ERROR - Unexpected output format: ('function_call', None)
+2024-07-19 18:12:41,015 - slack_ai_assistant - ERROR - Unexpected output format: ('tool_calls', None)
+2024-07-19 18:12:41,015 - slack_ai_assistant - DEBUG - Waiting on run - Thread ID: thread_l9NIs960gUONSC1i63XhX0QY, Run ID: run_UpwHOfiJAHOmKZaKd8X16nVD
+2024-07-19 18:12:42,562 - slack_ai_assistant - DEBUG - Run status: completed
+2024-07-19 18:12:42,562 - slack_ai_assistant - DEBUG - Getting assistant response
+2024-07-19 18:12:43,251 - slack_ai_assistant - DEBUG - List messages response: SyncCursorPage[Message](data=[Message(id='msg_j9cdlERWrsObfFIkhcA3vddw', assistant_id=None, attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='what is there to do in nashville'), type='text')], created_at=1721437958, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='user', run_id=None, status=None, thread_id='thread_l9NIs960gUONSC1i63XhX0QY'), Message(id='msg_yUty0EMo7zEQzTcyNy41GTQo', assistant_id='asst_LchyTrJxoG8J8nvNUnyfVkeU', attachments=[], completed_at=None, content=[TextContentBlock(text=Text(annotations=[], value='Nashville, Tennessee, is known for its vibrant music scene, historic sites, and Southern hospitality. Here are some popular things to do in Nashville:\n\n1. **Country Music Hall of Fame and Museum**: Explore the history of country music and see memorabilia from legendary musicians.\n\n2. **Grand Ole Opry**: Attend a live performance at the famous country music venue where many country music stars have performed.\n\n3. **Ryman Auditorium**: Visit the "Mother Church of Country Music" and enjoy a concert or take a guided tour of this historic venue.\n\n4. **Belle Meade Plantation**: Take a tour of this historic plantation and learn about its rich history and grand architecture.\n\n5. **The Parthenon**: Visit the full-scale replica of the ancient Greek Parthenon, located in Centennial Park.\n\n6. **Broadway**: Explore the lively honky-tonks and music venues on Lower Broadway for live music and a taste of Nashville\'s nightlife.\n\n7. **The Gulch**: Shop, dine, and explore the trendy neighborhood of The Gulch, known for its boutique shops, restaurants, and street art.\n\n8. **Cheekwood Estate & Gardens**: Wander through the beautiful gardens and visit the art museum at this historic estate.\n\n9. **Adventure Science Center**: Enjoy interactive exhibits and hands-on activities for all ages at this science museum.\n\n10. **Nashville Zoo**: Spend a day with the family exploring the diverse animal exhibits at the Nashville Zoo.\n\nFeel free to ask if you need more information on any specific activity or if you would like assistance with booking accommodations or flights to Nashville.'), type='text')], created_at=1721437960, incomplete_at=None, incomplete_details=None, metadata={}, object='thread.message', role='assistant', run_id='run_UpwHOfiJAHOmKZaKd8X16nVD', status=None, thread_id='thread_l9NIs960gUONSC1i63XhX0QY')], object='list', first_id='msg_j9cdlERWrsObfFIkhcA3vddw', last_id='msg_yUty0EMo7zEQzTcyNy41GTQo', has_more=False)
+2024-07-19 18:12:43,251 - slack_ai_assistant - DEBUG - Received messages: Nashville, Tennessee, is known for its vibrant music scene, historic sites, and Southern hospitality. Here are some popular things to do in Nashville:
+
+1. **Country Music Hall of Fame and Museum**: Explore the history of country music and see memorabilia from legendary musicians.
+
+2. **Grand Ole Opry**: Attend a live performance at the famous country music venue where many country music stars have performed.
+
+3. **Ryman Auditorium**: Visit the "Mother Church of Country Music" and enjoy a concert or take a guided tour of this historic venue.
+
+4. **Belle Meade Plantation**: Take a tour of this historic plantation and learn about its rich history and grand architecture.
+
+5. **The Parthenon**: Visit the full-scale replica of the ancient Greek Parthenon, located in Centennial Park.
+
+6. **Broadway**: Explore the lively honky-tonks and music venues on Lower Broadway for live music and a taste of Nashville's nightlife.
+
+7. **The Gulch**: Shop, dine, and explore the trendy neighborhood of The Gulch, known for its boutique shops, restaurants, and street art.
+
+8. **Cheekwood Estate & Gardens**: Wander through the beautiful gardens and visit the art museum at this historic estate.
+
+9. **Adventure Science Center**: Enjoy interactive exhibits and hands-on activities for all ages at this science museum.
+
+10. **Nashville Zoo**: Spend a day with the family exploring the diverse animal exhibits at the Nashville Zoo.
+
+Feel free to ask if you need more information on any specific activity or if you would like assistance with booking accommodations or flights to Nashville.
+2024-07-19 18:12:43,251 - slack_ai_assistant - WARNING - Messages object has no data attribute or data is empty

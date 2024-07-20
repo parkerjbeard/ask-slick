@@ -6,18 +6,20 @@ import asyncio
 from app.slack_bot import create_slack_bot
 from app.services.travel.travel_planner import TravelPlanner
 from utils.logger import logger
-from app.assistant_manager import AssistantManager
-from app.dispatcher import Dispatcher
+from app.assistants.assistant_manager import AssistantManager
+from app.assistants.dispatcher import Dispatcher
+from app.assistants.assistant_factory import AssistantFactory
 
 async def update_assistants():
     assistant_manager = AssistantManager()
     dispatcher = Dispatcher()
+    assistant_factory = AssistantFactory()
     
     assistants = await assistant_manager.list_assistants()
     
     for assistant_name in ["TravelAssistant", "EmailAssistant", "GeneralAssistant", "ClassifierAssistant"]:
         assistant_id = assistants.get(assistant_name)
-        tools, model = dispatcher.get_tools_for_assistant(assistant_name)
+        tools, model = assistant_factory.get_tools_for_assistant(assistant_name)
         instructions = f"You are a {assistant_name}."
         
         if assistant_name == "ClassifierAssistant":
