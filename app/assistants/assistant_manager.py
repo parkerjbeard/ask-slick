@@ -16,8 +16,12 @@ class AssistantManager:
         response = self.client.beta.assistants.list()
         return {assistant.name: assistant.id for assistant in response.data}
 
-    async def retrieve_assistant(self, assistant_id: str) -> Any:
-        return self.client.beta.assistants.retrieve(assistant_id)
+    def retrieve_assistant(self, assistant_id: str) -> Any:
+        if not hasattr(self, '_assistant_cache'):
+            self._assistant_cache = {}
+        if assistant_id not in self._assistant_cache:
+            self._assistant_cache[assistant_id] = self.client.beta.assistants.retrieve(assistant_id)
+        return self._assistant_cache[assistant_id]
 
     async def create_assistant(self, name: str, instructions: str, tools: List[Dict[str, Any]], model: str) -> Any:
         return self.client.beta.assistants.create(
@@ -88,9 +92,11 @@ class AssistantManager:
     
     # Run management
     async def create_run(self, thread_id: str, assistant_id: str, instructions: Optional[str] = None) -> Any:
+        assistant = self.retrieve_assistant(assistant_id)
         run_params = {
             "thread_id": thread_id,
             "assistant_id": assistant_id,
+            "tools": assistant.tools,  # Include the assistant's tools in each run
         }
         if instructions:
             run_params["instructions"] = instructions

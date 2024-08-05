@@ -90,8 +90,8 @@ class TravelPlanner:
         if parsed_request['check_in'] == 'this weekend' or parsed_request['check_out'] == 'this weekend':
             parsed_request['check_in'], parsed_request['check_out'] = get_weekend_dates()
 
-        if parsed_request['origin'] is None and self.default_origin:
-            parsed_request['origin'] = self.default_origin
+        if parsed_request['origin'] is None or parsed_request['origin'] == "null" or parsed_request['origin'] == "":
+            parsed_request['origin'] = self.default_origin or None
 
         if parsed_request['departure_date'] and parsed_request['return_date']:
             dep_date = datetime.strptime(parsed_request['departure_date'], '%Y-%m-%d')

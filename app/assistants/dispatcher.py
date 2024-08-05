@@ -21,21 +21,17 @@ class Dispatcher:
 
     async def dispatch(self, user_input: str) -> dict:
         try:
+            logger.info(f"Starting dispatch for user input: {user_input}")
+            
             category = await self.classifier.classify_message(user_input)
+            
             assistant_name = AssistantFactory.get_assistant_name(category)
+            logger.info(f"Selected assistant: {assistant_name}")
+            
             chat_history = await self.get_chat_history()
             
-            travel_structured_data = None
-            if assistant_name == "TravelAssistant":
-                travel_structured_data = self.travel_planner.parse_travel_request(user_input, chat_history)
-                logger.debug(f"Travel structured data: {travel_structured_data}")
-                if travel_structured_data is None:
-                    return {'thread_id': None, 'run_id': None, 'error': "Failed to parse travel request"}
-                if "error" in travel_structured_data:
-                    return {'thread_id': None, 'run_id': None, 'error': travel_structured_data["error"]}
-
             assistant_id = await self.assistant_manager.create_or_get_assistant(assistant_name)
-
+            
             if not self.thread_id:
                 thread = await self.assistant_manager.create_thread()
                 self.thread_id = thread.id
@@ -50,6 +46,7 @@ class Dispatcher:
                 
                 if run.status == "completed":
                     assistant_response = await self.assistant_manager.get_assistant_response(self.thread_id, run.id)
+                    
                     return {
                         'thread_id': self.thread_id,
                         'run_id': run.id,
@@ -58,7 +55,7 @@ class Dispatcher:
                 elif run.status == "requires_action":
                     # Handle function calls
                     tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                    function_outputs = await self.handle_tool_calls(tool_calls, travel_structured_data)
+                    function_outputs = await self.handle_tool_calls(tool_calls, user_input, chat_history)
                     
                     # Submit tool outputs and continue the run
                     run = await self.assistant_manager.submit_tool_outputs(self.thread_id, run.id, function_outputs)
@@ -74,14 +71,15 @@ class Dispatcher:
             logger.error(f"Error in dispatch: {str(e)}", exc_info=True)
             return {'thread_id': self.thread_id, 'run_id': None, 'error': str(e)}
 
-    async def handle_tool_calls(self, tool_calls, travel_structured_data=None):
+    async def handle_tool_calls(self, tool_calls, user_input: str, chat_history: List[str]):
         function_outputs = []
         for tool_call in tool_calls:
             function_name = tool_call.function.name
             function_args = json.loads(tool_call.function.arguments)
             
-            if travel_structured_data and function_name in ["search_flights", "search_hotels", "plan_trip"]:
-                # Use travel_structured_data for travel-related functions
+            if function_name in ["search_flights", "search_hotels", "plan_trip"]:
+                # Parse travel request only when needed
+                travel_structured_data = self.travel_planner.parse_travel_request(user_input, chat_history)
                 result = await self.call_function(function_name, travel_structured_data)
             else:
                 result = await self.call_function(function_name, function_args)
@@ -94,20 +92,22 @@ class Dispatcher:
 
     async def call_function(self, function_name: str, function_params: dict) -> str:
         logger.debug(f"Executing function: {function_name} with parameters: {function_params}")
+        result = ""
         if function_name == "search_flights":
             if all(key in function_params for key in ["origin", "destination", "departure_date"]):
-                return await self.travel_planner._search_flights(function_params)
+                result = await self.travel_planner._search_flights(function_params)
             else:
-                return "Missing required parameters for flight search"
+                result = "Missing required parameters for flight search"
         elif function_name == "search_hotels":
             if all(key in function_params for key in ["location", "check_in_date", "check_out_date"]):
-                return await self.travel_planner._search_hotels(function_params)
+                result = await self.travel_planner._search_hotels(function_params)
             else:
-                return "Missing required parameters for hotel search"
+                result = "Missing required parameters for hotel search"
         elif function_name == "plan_trip":
-            return await self.travel_planner.plan_trip(function_params)
+            result = await self.travel_planner.plan_trip(function_params)
         else:
-            return f"Unknown function: {function_name}"
+            result = f"Unknown function: {function_name}"
+        return result
 
     async def get_chat_history(self) -> List[str]:
         if not self.thread_id:
@@ -152,21 +152,6 @@ class Dispatcher:
             })
 
         return function_outputs
-
-    # async def call_function(self, function_name: str, function_params: dict) -> str:
-    #     logger.debug(f"Executing function: {function_name} with parameters: {function_params}")
-    #     if function_name == "search_flights":
-    #         if all(key in function_params for key in ["origin", "destination", "departure_date"]):
-    #             return await self.travel_planner._search_flights(function_params)
-    #         else:
-    #             return "Missing required parameters for flight search"
-    #     elif function_name == "search_hotels":
-    #         if all(key in function_params for key in ["location", "check_in_date", "check_out_date"]):
-    #             return await self.travel_planner._search_hotels(function_params)
-    #         else:
-    #             return "Missing required parameters for hotel search"
-    #     else:
-    #         return f"Unknown function: {function_name}"
 
     async def create_assistant(self, name: str) -> str:
         tools, model = AssistantFactory.get_tools_for_assistant(name)

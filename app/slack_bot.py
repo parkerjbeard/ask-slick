@@ -14,7 +14,6 @@ def create_slack_bot(travel_planner: TravelPlanner):
         signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
     )
 
-    slack_formatter = SlackMessageFormatter()
     assistant_manager = AssistantManager()
     dispatcher = Dispatcher()
 
@@ -80,7 +79,7 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
     except Exception as e:
         logger.error(f"Error processing message: {str(e)}", exc_info=True)
         await say(text="I'm sorry, but I encountered an error while processing your request. Please try again later.", channel=channel)
-        
+
 async def handle_tool_call(tool_call, travel_planner):
     function_name = tool_call.function.name
     function_args = json.loads(tool_call.function.arguments)
