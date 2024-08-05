@@ -6,6 +6,7 @@ from app.assistants.dispatcher import Dispatcher
 from app.services.travel.travel_planner import TravelPlanner
 from utils.logger import logger
 from utils.slack_formatter import SlackMessageFormatter
+import traceback
 
 def create_slack_bot(travel_planner: TravelPlanner):
     logger.debug("Creating Slack bot")
@@ -56,6 +57,10 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
         function_outputs = dispatch_result.get('function_outputs')
         assistant_response = dispatch_result.get('assistant_response')
         
+        logger.debug(f"Thread ID: {thread_id}, Run ID: {run_id}")
+        logger.debug(f"Function outputs: {function_outputs}")
+        logger.debug(f"Assistant response: {assistant_response}")
+
         if not thread_id or not run_id:
             logger.error("Invalid dispatch result: missing thread_id or run_id")
             await say(text="I'm sorry, but I encountered an error while processing your request. Please try again later.", channel=channel)
@@ -65,20 +70,23 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
             logger.debug(f"Sending function outputs: {function_outputs}")
             for output in function_outputs:
                 if isinstance(output, dict) and 'output' in output:
+                    logger.debug(f"Sending function output: {output['output']}")
                     await send_slack_response(say, output['output'], None, channel)
                 else:
                     logger.error(f"Unexpected output format: {output}")
 
         if assistant_response:
-            logger.debug(f"Assistant response: {assistant_response}")
+            logger.debug(f"Sending assistant response: {assistant_response}")
             await send_slack_response(say, assistant_response, None, channel)
         else:
             logger.warning("No assistant response received")
             await say(text="I'm sorry, but I couldn't generate a response. Please try again.", channel=channel)
 
     except Exception as e:
-        logger.error(f"Error processing message: {str(e)}", exc_info=True)
-        await say(text="I'm sorry, but I encountered an error while processing your request. Please try again later.", channel=channel)
+        logger.error(f"Error processing message: {str(e)}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        await say(text=f"I'm sorry, but I encountered an error while processing your request: {str(e)}\nPlease try again later.", channel=channel)
+
 
 async def handle_tool_call(tool_call, travel_planner):
     function_name = tool_call.function.name
@@ -90,8 +98,6 @@ async def handle_tool_call(tool_call, travel_planner):
         result = await travel_planner._search_flights(function_args)
     elif function_name == "search_hotels":
         result = await travel_planner._search_hotels(function_args)
-    elif function_name == "plan_trip":
-        result = await travel_planner.plan_trip(function_args["travel_request"])
     else:
         logger.warning(f"Unknown function: {function_name}")
         result = f"Unknown function: {function_name}"

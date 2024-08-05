@@ -8,6 +8,7 @@ from .search_hotel import create_hotel_search
 from utils.dates_format import parse_date, get_weekend_dates, get_next_weekday
 from app.openai_helper import OpenAIClient
 from utils.logger import logger
+import traceback
 import re
 
 class TravelPlanner:
@@ -90,7 +91,7 @@ class TravelPlanner:
         if parsed_request['check_in'] == 'this weekend' or parsed_request['check_out'] == 'this weekend':
             parsed_request['check_in'], parsed_request['check_out'] = get_weekend_dates()
 
-        if parsed_request['origin'] is None or parsed_request['origin'] == "null" or parsed_request['origin'] == "":
+        if parsed_request['origin'] is None or parsed_request['origin'] in ["null", "", "none"]:
             parsed_request['origin'] = self.default_origin or None
 
         if parsed_request['departure_date'] and parsed_request['return_date']:
@@ -105,27 +106,6 @@ class TravelPlanner:
             travel_request["origin"] = travel_request["origin"].upper()
         if travel_request["destination"]:
             travel_request["destination"] = travel_request["destination"].upper()
-
-    def plan_trip(self, travel_request: Dict[str, Any]) -> Tuple[str, List[Any]]:
-        response = ""
-        flights = []
-
-        hotel_response = self._search_hotels(travel_request)
-        if hotel_response:
-            response += hotel_response
-
-        flight_response, flights = self._search_flights(travel_request)
-        if flight_response:
-            response += flight_response
-
-        suggestion_response = self._generate_suggestions(travel_request)
-        if suggestion_response:
-            response += suggestion_response
-
-        if not response:
-            response = self._handle_insufficient_info(travel_request)
-
-        return response.strip(), flights
 
     async def _search_hotels(self, travel_request: dict) -> Tuple[str, List[Any]]:
         """Search for hotels based on the travel request."""
@@ -152,18 +132,26 @@ class TravelPlanner:
         """Search for flights based on the travel request."""
         logger.debug(f"Searching flights with parameters: {travel_request}")
         if travel_request.get("origin") and travel_request.get("destination") and travel_request.get("departure_date"):
-            flights = self.flight_search.search_flights(
-                origin=travel_request["origin"],
-                destination=travel_request["destination"],
-                departure_date=travel_request["departure_date"],
-                return_date=travel_request.get("return_date"),
-                adults=travel_request.get("adults", "1"),
-                travel_class=travel_request.get("travel_class", "1")
-            )
-            response = f"Flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}:\n"
-            response += f"{flights}\n\n"
-            return response
-        return "Insufficient information to search for flights."
+            try:
+                flights = self.flight_search.search_flights(
+                    origin=travel_request["origin"],
+                    destination=travel_request["destination"],
+                    departure_date=travel_request["departure_date"],
+                    return_date=travel_request.get("return_date"),
+                    adults=travel_request.get("adults", "1"),
+                    travel_class=travel_request.get("travel_class", "1")
+                )
+                logger.debug(f"Flight search results: {flights}")
+                response = f"Flights from {travel_request['origin']} to {travel_request['destination']} on {travel_request['departure_date']}:\n"
+                response += f"{flights}\n\n"
+                return response
+            except Exception as e:
+                logger.error(f"Error searching for flights: {str(e)}")
+                logger.error(f"Traceback: {traceback.format_exc()}")
+                return f"An error occurred while searching for flights: {str(e)}"
+        else:
+            logger.warning("Insufficient information to search for flights")
+            return "Insufficient information to search for flights."
 
     def _generate_suggestions(self, travel_request: Dict[str, Any]) -> str:
         if travel_request["destination"] and not (travel_request["origin"] or (travel_request["check_in"] and travel_request["check_out"])):

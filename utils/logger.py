@@ -19,7 +19,7 @@ console_handler = logging.StreamHandler()
 file_handler = RotatingFileHandler(log_file, maxBytes=5*1024*1024, backupCount=2)
 
 # Set logging levels for handlers
-console_handler.setLevel(logging.INFO)
+console_handler.setLevel(logging.DEBUG)
 file_handler.setLevel(logging.DEBUG)
 
 # Create formatters and add them to handlers

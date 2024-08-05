@@ -77,7 +77,7 @@ class Dispatcher:
             function_name = tool_call.function.name
             function_args = json.loads(tool_call.function.arguments)
             
-            if function_name in ["search_flights", "search_hotels", "plan_trip"]:
+            if function_name in ["search_flights", "search_hotels"]:
                 # Parse travel request only when needed
                 travel_structured_data = self.travel_planner.parse_travel_request(user_input, chat_history)
                 result = await self.call_function(function_name, travel_structured_data)
@@ -103,8 +103,6 @@ class Dispatcher:
                 result = await self.travel_planner._search_hotels(function_params)
             else:
                 result = "Missing required parameters for hotel search"
-        elif function_name == "plan_trip":
-            result = await self.travel_planner.plan_trip(function_params)
         else:
             result = f"Unknown function: {function_name}"
         return result
