@@ -1,7 +1,9 @@
 import os
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple, List
 from datetime import datetime, timedelta
 import requests
+from utils.logger import logger
+import traceback
 
 class FlightSearch:
     def __init__(self):
@@ -23,6 +25,7 @@ class FlightSearch:
         }
 
     def search_flights(self, origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, **kwargs) -> str:
+        logger.debug(f"Searching flights with parameters: origin={origin}, destination={destination}, departure_date={departure_date}, return_date={return_date}, kwargs={kwargs}")
         try:
             params = self._build_params(origin, destination, departure_date, return_date, **kwargs)
             response = requests.get("https://serpapi.com/search", params=params)
@@ -36,8 +39,12 @@ class FlightSearch:
             if not best_flights:
                 return "No best flights found"
 
-            return self._format_flight_results(best_flights)
+            formatted_results = self._format_flight_results(best_flights)
+            logger.debug(f"Flight search results: {formatted_results}")
+            return formatted_results
         except requests.RequestException as e:
+            logger.error(f"Error searching for flights: {str(e)}")
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return f"Failed to retrieve flight data: {str(e)}"
 
     def _build_params(self, origin: str, destination: str, departure_date: str, return_date: Optional[str], **kwargs) -> Dict[str, Any]:
@@ -82,14 +89,16 @@ class FlightSearch:
             for flight in flight_group.get("flights", []):
                 duration_hours, duration_minutes = divmod(flight["duration"], 60)
                 departure_time = datetime.strptime(flight['departure_airport']['time'], '%Y-%m-%d %H:%M')
-                formatted_time = departure_time.strftime('%m-%d %H:%M')
+                arrival_time = datetime.strptime(flight['arrival_airport']['time'], '%Y-%m-%d %H:%M')
+                formatted_departure = departure_time.strftime('%B %d at %H:%M')
+                formatted_arrival = arrival_time.strftime('%B %d at %H:%M')
                 flight_details.append(
-                    f"{flight['airline']} - {flight['departure_airport']['name']} ({flight['departure_airport']['id']}) "
-                    f"to {flight['arrival_airport']['name']} ({flight['arrival_airport']['id']}) - {formatted_time} - "
-                    f"{duration_hours}h {duration_minutes}m"
+                    f"  - Departure: {flight['departure_airport']['name']} ({flight['departure_airport']['id']}) on {formatted_departure}\n"
+                    f"  - Arrival: {flight['arrival_airport']['name']} ({flight['arrival_airport']['id']}) on {formatted_arrival}\n"
+                    f"  - Duration: {duration_hours}h {duration_minutes}m"
                 )
             formatted_output.append(
-                f"Flight {idx} - ${flight_group['price']} - {len(flight_group.get('flights', [])) - 1} stop(s):\n" +
+                f"{idx}. {flight_group['airline']} - ${flight_group['price']} - {len(flight_group.get('flights', [])) - 1} stop(s):\n" +
                 "\n".join(flight_details)
             )
         return "\n\n".join(formatted_output)

@@ -94,3 +94,10 @@ class OpenAIClient:
         response = self._create_chat_completion(messages)
         logger.debug(f"OpenAI response for travel request extraction: {response}")
         return response["message"]
+
+    def generate_short_response(self, message: str) -> str:
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that provides very brief, acknowledging responses to user messages. Your response should be a simple acknowledgment that you're working on the answer, without implying the full information is immediately available. Keep it one short sentence."},
+            {"role": "user", "content": f"Provide a brief response that acknowledges the user's request and indicates you're working on it (like 'I'm looking into that for you' or 'Let me gather that information') for this message: {message}"}
+        ]
+        return self._create_chat_completion(messages)["message"]

@@ -1,6 +1,5 @@
 from openai import OpenAI
 from app.assistants.assistant_manager import AssistantManager
-from app.openai_helper import OpenAIClient
 from app.services.travel.travel_planner import TravelPlanner
 from app.assistants.assistant_factory import AssistantFactory
 from app.assistants.classifier import Classifier
@@ -14,18 +13,18 @@ class Dispatcher:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.assistant_manager = AssistantManager()
-        self.openai_client = OpenAIClient()
         self.travel_planner = TravelPlanner()
         self.classifier = Classifier(self.assistant_manager)
         self.thread_id = None
+        self.current_category = None
 
     async def dispatch(self, user_input: str) -> dict:
         try:
             logger.info(f"Starting dispatch for user input: {user_input}")
             
-            category = await self.classifier.classify_message(user_input)
+            self.current_category = await self.classifier.classify_message(user_input)
             
-            assistant_name = AssistantFactory.get_assistant_name(category)
+            assistant_name = AssistantFactory.get_assistant_name(self.current_category)
             logger.info(f"Selected assistant: {assistant_name}")
             
             chat_history = await self.get_chat_history()
@@ -92,20 +91,14 @@ class Dispatcher:
 
     async def call_function(self, function_name: str, function_params: dict) -> str:
         logger.debug(f"Executing function: {function_name} with parameters: {function_params}")
-        result = ""
-        if function_name == "search_flights":
-            if all(key in function_params for key in ["origin", "destination", "departure_date"]):
-                result = await self.travel_planner._search_flights(function_params)
-            else:
-                result = "Missing required parameters for flight search"
-        elif function_name == "search_hotels":
-            if all(key in function_params for key in ["location", "check_in_date", "check_out_date"]):
-                result = await self.travel_planner._search_hotels(function_params)
-            else:
-                result = "Missing required parameters for hotel search"
+        
+        assistant_name = AssistantFactory.get_assistant_name(self.current_category)
+        integration = AssistantFactory.get_api_integration(assistant_name)
+        
+        if integration:
+            return await integration.execute(function_name, function_params)
         else:
-            result = f"Unknown function: {function_name}"
-        return result
+            return f"Unknown function: {function_name}"
 
     async def get_chat_history(self) -> List[str]:
         if not self.thread_id:

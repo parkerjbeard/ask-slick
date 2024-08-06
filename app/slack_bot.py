@@ -7,6 +7,7 @@ from app.services.travel.travel_planner import TravelPlanner
 from utils.logger import logger
 from utils.slack_formatter import SlackMessageFormatter
 import traceback
+from app.openai_helper import OpenAIClient
 
 def create_slack_bot(travel_planner: TravelPlanner):
     logger.debug("Creating Slack bot")
@@ -43,6 +44,10 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
         return
 
     try:
+        openai_client = OpenAIClient()
+        short_response = openai_client.generate_short_response(text)
+        await say(text=short_response, channel=channel)
+
         logger.debug("Dispatching message")
         dispatch_result = await dispatcher.dispatch(text.lower())
         logger.debug(f"Dispatch result: {dispatch_result}")
