@@ -1,6 +1,5 @@
 from openai import OpenAI
 from app.assistants.assistant_manager import AssistantManager
-from app.services.travel.travel_planner import TravelPlanner
 from app.assistants.assistant_factory import AssistantFactory
 from app.assistants.classifier import Classifier
 import os
@@ -8,27 +7,28 @@ import json
 import asyncio
 from utils.logger import logger
 from typing import List
+from app.openai_helper import OpenAIClient
+from app.services.travel.search_flight import FlightSearch
 
 class Dispatcher:
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.assistant_manager = AssistantManager()
-        self.travel_planner = TravelPlanner()
         self.classifier = Classifier(self.assistant_manager)
         self.thread_id = None
         self.current_category = None
+        self.openai_helper = OpenAIClient()
+        self.search_flight = FlightSearch()
 
     async def dispatch(self, user_input: str) -> dict:
         try:
             logger.info(f"Starting dispatch for user input: {user_input}")
             
             self.current_category = await self.classifier.classify_message(user_input)
-            
             assistant_name = AssistantFactory.get_assistant_name(self.current_category)
             logger.info(f"Selected assistant: {assistant_name}")
             
             chat_history = await self.get_chat_history()
-            
             assistant_id = await self.assistant_manager.create_or_get_assistant(assistant_name)
             
             if not self.thread_id:
@@ -36,51 +36,48 @@ class Dispatcher:
                 self.thread_id = thread.id
             
             await self.assistant_manager.create_message(self.thread_id, "user", user_input)
-
             run = await self.assistant_manager.create_run(assistant_id=assistant_id, thread_id=self.thread_id)
             
-            # Wait for the assistant's response or function call
-            while True:
-                run = self.assistant_manager.wait_on_run(self.thread_id, run.id)
-                
-                if run.status == "completed":
-                    assistant_response = await self.assistant_manager.get_assistant_response(self.thread_id, run.id)
-                    
-                    return {
-                        'thread_id': self.thread_id,
-                        'run_id': run.id,
-                        'assistant_response': assistant_response
-                    }
-                elif run.status == "requires_action":
-                    # Handle function calls
-                    tool_calls = run.required_action.submit_tool_outputs.tool_calls
-                    function_outputs = await self.handle_tool_calls(tool_calls, user_input, chat_history)
-                    
-                    # Submit tool outputs and continue the run
-                    run = await self.assistant_manager.submit_tool_outputs(self.thread_id, run.id, function_outputs)
-                else:
-                    logger.error(f"Unexpected run status: {run.status}")
-                    return {
-                        'thread_id': self.thread_id,
-                        'run_id': run.id,
-                        'error': f"Unexpected run status: {run.status}"
-                    }
+            return await self.process_run(run, user_input, chat_history)
 
         except Exception as e:
             logger.error(f"Error in dispatch: {str(e)}", exc_info=True)
             return {'thread_id': self.thread_id, 'run_id': None, 'error': str(e)}
 
+    async def process_run(self, run, user_input: str, chat_history: List[str]) -> dict:
+        while True:
+            run = self.assistant_manager.wait_on_run(self.thread_id, run.id)
+            
+            if run.status == "completed":
+                assistant_response = await self.assistant_manager.get_assistant_response(self.thread_id, run.id)
+                return {
+                    'thread_id': self.thread_id,
+                    'run_id': run.id,
+                    'assistant_response': assistant_response
+                }
+            elif run.status == "requires_action":
+                tool_calls = run.required_action.submit_tool_outputs.tool_calls
+                function_outputs = await self.handle_tool_calls(tool_calls, user_input, chat_history)
+                run = await self.assistant_manager.submit_tool_outputs(self.thread_id, run.id, function_outputs)
+            else:
+                logger.error(f"Unexpected run status: {run.status}")
+                return {
+                    'thread_id': self.thread_id,
+                    'run_id': run.id,
+                    'error': f"Unexpected run status: {run.status}"
+                }
+
     async def handle_tool_calls(self, tool_calls, user_input: str, chat_history: List[str]):
         function_outputs = []
         for tool_call in tool_calls:
             function_name = tool_call.function.name
-            function_args = json.loads(tool_call.function.arguments)
             
             if function_name in ["search_flights", "search_hotels"]:
-                # Parse travel request only when needed
-                travel_structured_data = self.travel_planner.parse_travel_request(user_input, chat_history)
-                result = await self.call_function(function_name, travel_structured_data)
+                travel_structured_data = await self.get_structured_travel_request(user_input, chat_history, function_name)
+                processed_request = self.search_flight._process_travel_request(travel_structured_data)
+                result = await self.call_function(function_name, processed_request)
             else:
+                function_args = json.loads(tool_call.function.arguments)
                 result = await self.call_function(function_name, function_args)
             
             function_outputs.append({
@@ -88,6 +85,29 @@ class Dispatcher:
                 "output": result
             })
         return function_outputs
+
+    async def get_structured_travel_request(self, user_input: str, chat_history: List[str], function_name: str) -> dict:
+        # Prepare the chat history context
+        history_context = "\n".join(chat_history[-10:])  # Use the last 10 messages for context
+        
+        messages = [
+            {"role": "system", "content": """You are a travel assistant parsing travel requests. 
+            When extracting information, follow these rules:
+            1. For origin and destination, always use 3-letter IATA airport codes.
+            2. If a specific airport is not mentioned, use the main airport code for the given city, state, or country.
+               For example:
+               - New York -> JFK (John F. Kennedy International Airport)
+               - California -> LAX (Los Angeles International Airport)
+               - Japan -> NRT (Narita International Airport)
+            3. If the origin is not specified at all, use 'NULL' as the value.
+            4. For all other fields, if the information is not provided, leave the field empty.
+            5. Always include all fields in the output, even if they are empty.
+            6. Use the chat history as context to infer any missing information.
+            7. If you're unsure about the correct airport code, use your best judgment to provide the most likely code for the main airport in that location."""},
+            {"role": "user", "content": f"Chat history:\n{history_context}\n\nParse the following travel request for {function_name}, using the chat history as context:\n\n{user_input}"}
+        ]
+        return await self.assistant_manager.create_structured_completion(messages, "TravelAssistant", function_name)
+
 
     async def call_function(self, function_name: str, function_params: dict) -> str:
         logger.debug(f"Executing function: {function_name} with parameters: {function_params}")

@@ -3,13 +3,14 @@ import json
 from slack_bolt.async_app import AsyncApp
 from app.assistants.assistant_manager import AssistantManager
 from app.assistants.dispatcher import Dispatcher
-from app.services.travel.travel_planner import TravelPlanner
 from utils.logger import logger
 from utils.slack_formatter import SlackMessageFormatter
 import traceback
 from app.openai_helper import OpenAIClient
+from app.services.travel.search_flight import FlightSearch
+from app.services.travel.search_hotel import HotelSearch
 
-def create_slack_bot(travel_planner: TravelPlanner):
+def create_slack_bot():
     logger.debug("Creating Slack bot")
     app = AsyncApp(
         token=os.environ.get("SLACK_BOT_TOKEN"),
@@ -22,7 +23,7 @@ def create_slack_bot(travel_planner: TravelPlanner):
     @app.event("message")
     async def handle_message_events(event, say):
         logger.debug(f"Received message event: {event}")
-        await process_message_event(event, say, travel_planner, assistant_manager, dispatcher)
+        await process_message_event(event, say, dispatcher)
 
     @app.error
     async def global_error_handler(error, body, logger):
@@ -32,7 +33,7 @@ def create_slack_bot(travel_planner: TravelPlanner):
     logger.debug("Slack bot created successfully")
     return app
 
-async def process_message_event(event, say, travel_planner, assistant_manager, dispatcher):
+async def process_message_event(event, say, dispatcher):
     text = event.get("text", "")
     user = event.get("user")
     channel = event.get("channel")
@@ -93,16 +94,18 @@ async def process_message_event(event, say, travel_planner, assistant_manager, d
         await say(text=f"I'm sorry, but I encountered an error while processing your request: {str(e)}\nPlease try again later.", channel=channel)
 
 
-async def handle_tool_call(tool_call, travel_planner):
+async def handle_tool_call(tool_call):
     function_name = tool_call.function.name
     function_args = json.loads(tool_call.function.arguments)
-    
+    search_flight = FlightSearch()
+    search_hotel = HotelSearch()
+
     logger.debug(f"Handling tool call - Function: {function_name}, Arguments: {function_args}")
     
     if function_name == "search_flights":
-        result = await travel_planner._search_flights(function_args)
+        result = await search_flight.search_flights(function_args)
     elif function_name == "search_hotels":
-        result = await travel_planner._search_hotels(function_args)
+        result = await search_hotel.search_hotels(function_args)
     else:
         logger.warning(f"Unknown function: {function_name}")
         result = f"Unknown function: {function_name}"

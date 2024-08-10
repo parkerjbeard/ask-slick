@@ -4,6 +4,7 @@ from datetime import datetime
 import requests
 from utils.logger import logger
 import traceback
+from utils.travel_format import process_travel_dates
 
 class HotelSearch:
     def __init__(self):
@@ -22,10 +23,13 @@ class HotelSearch:
             "output": "json"
         }
 
-    def search_hotels(self, location: str, check_in_date: str, check_out_date: str, **kwargs) -> str:
-        logger.debug(f"Searching hotels with parameters: location={location}, check_in_date={check_in_date}, check_out_date={check_out_date}, kwargs={kwargs}")
+    def search_hotels(self, travel_request: Dict[str, Any]) -> str:
+        logger.debug(f"Searching hotels with travel request: {travel_request}")
         try:
-            params = self._build_params(location, check_in_date, check_out_date, **kwargs)
+            # Process and normalize the travel request
+            processed_request = self._process_travel_request(travel_request)
+            
+            params = self._build_params(processed_request)
             response = requests.get("https://serpapi.com/search", params=params)
             response.raise_for_status()
             data = response.json()
@@ -45,16 +49,24 @@ class HotelSearch:
             logger.error(f"Traceback: {traceback.format_exc()}")
             return f"Failed to retrieve hotel data: {str(e)}"
 
-    def _build_params(self, location: str, check_in_date: str, check_out_date: str, **kwargs) -> Dict[str, Any]:
+    def _process_travel_request(self, travel_request: Dict[str, Any]) -> Dict[str, Any]:
+        processed_request = travel_request.copy()
+        
+        # Process dates
+        processed_request = process_travel_dates(processed_request)
+        
+        return processed_request
+
+    def _build_params(self, travel_request: Dict[str, Any]) -> Dict[str, Any]:
         params = {
-            "q": location,
-            "check_in_date": check_in_date,
-            "check_out_date": check_out_date,
+            "q": travel_request["destination"],
+            "check_in_date": travel_request["check_in"],
+            "check_out_date": travel_request["check_out"],
             "api_key": self.serpapi_api_key,
         }
 
         params.update(self.default_params)
-        params.update({k: v for k, v in kwargs.items() if k in self._get_optional_params()})
+        params.update({k: v for k, v in travel_request.items() if k in self._get_optional_params()})
 
         return params
 

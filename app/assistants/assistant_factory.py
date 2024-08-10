@@ -14,12 +14,11 @@ class AssistantFactory:
         }.get(category, "GeneralAssistant")
     
     @staticmethod
-    def get_api_integration(name: str):
+    def get_api_integration(name: str) -> Any:
         if name == "TravelAssistant":
             return TravelIntegration()
         # Add other API integrations as they are created
-        else:
-            return None
+        return None
 
     @staticmethod
     def get_tools_for_assistant(name: str) -> Tuple[List[Dict[str, Any]], str]:
@@ -30,19 +29,15 @@ class AssistantFactory:
                 if tool['type'] == 'function':
                     tool['function']['parameters'] = AssistantFactory.get_json_schema(name, tool['function']['name'])
             return tools, "gpt-4o-mini"
-        else:
-            return [], "gpt-4o-mini"
+        return [], "gpt-4o-mini"
 
     @staticmethod
     def get_assistant_instructions(name: str) -> str:
         integration = AssistantFactory.get_api_integration(name)
-        if integration:
-            return integration.get_instructions()
-        else:
-            return f"You are a {name}."
+        return integration.get_instructions() if integration else f"You are a {name}."
 
     @staticmethod
-    def get_json_schema(name: str, function_name: str = None) -> dict:
+    def get_json_schema(name: str, function_name: str = None) -> Dict[str, Any]:
         if name == "TravelAssistant":
             if function_name == "search_flights":
                 return {
@@ -69,6 +64,9 @@ class AssistantFactory:
                     },
                     "required": ["location", "check_in", "check_out"]
                 }
-            # Add more function-specific schemas as needed
         # Add schemas for other assistant types
-        return {}
+        return {
+            "type": "object",
+            "properties": {},
+            "required": []
+        }

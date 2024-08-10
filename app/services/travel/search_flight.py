@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import requests
 from utils.logger import logger
 import traceback
+from utils.travel_format import normalize_airport_codes, process_travel_dates, set_default_origin
 
 class FlightSearch:
     def __init__(self):
@@ -23,19 +24,30 @@ class FlightSearch:
             "stops": "0",
             "show_hidden": "false"
         }
+        self.default_origin = os.getenv("DEFAULT_ORIGIN", "")
 
-    def search_flights(self, origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, **kwargs) -> str:
-        logger.debug(f"Searching flights with parameters: origin={origin}, destination={destination}, departure_date={departure_date}, return_date={return_date}, kwargs={kwargs}")
+    def search_flights(self, travel_request: Dict[str, Any]) -> str:
+        logger.debug(f"Searching flights with travel request: {travel_request}")
         try:
-            params = self._build_params(origin, destination, departure_date, return_date, **kwargs)
+            if not travel_request:
+                return "No travel request provided for flight search"
+
+            # Process and normalize the travel request
+            processed_request = self._process_travel_request(travel_request)
+            
+            params = self._build_params(processed_request)
+            logger.debug(f"API request params: {params}")
             response = requests.get("https://serpapi.com/search", params=params)
             response.raise_for_status()
             data = response.json()
+
+            #logger.debug(f"API response data: {data}")
 
             if "error" in data:
                 return f"Failed to retrieve flight data: {data['error']}"
 
             best_flights = data.get("best_flights", [])
+            logger.debug(f"Best flights data: {best_flights}")
             if not best_flights:
                 return "No best flights found"
 
@@ -47,32 +59,40 @@ class FlightSearch:
             logger.error(f"Traceback: {traceback.format_exc()}")
             return f"Failed to retrieve flight data: {str(e)}"
 
-    def _build_params(self, origin: str, destination: str, departure_date: str, return_date: Optional[str], **kwargs) -> Dict[str, Any]:
+
+    def _process_travel_request(self, travel_request: Dict[str, Any]) -> Dict[str, Any]:
+        processed_request = travel_request
+        
+        # Normalize airport codes
+        processed_request = normalize_airport_codes(processed_request)
+        
+        # Process dates
+        processed_request = process_travel_dates(processed_request)
+        
+        # Set default origin if not provided
+        processed_request = set_default_origin(processed_request, self.default_origin)
+        
+        return processed_request
+
+    def _build_params(self, travel_request: Dict[str, Any]) -> Dict[str, Any]:
         params = {
             "engine": "google_flights",
             "api_key": self.serpapi_api_key,
-            "departure_id": origin,
-            "arrival_id": destination,
-            "outbound_date": departure_date,
+            "departure_id": travel_request["origin"],
+            "arrival_id": travel_request["destination"],
+            "outbound_date": travel_request["departure_date"],
         }
 
-        if return_date:
-            params["return_date"] = self._validate_return_date(departure_date, return_date)
-            params["type"] = kwargs.get("type", "1")  # Default to round trip
+        if travel_request.get("return_date"):
+            params["return_date"] = travel_request["return_date"]
+            params["type"] = "1"  # Round trip
         else:
             params["type"] = "2"  # One-way trip
 
         params.update(self.default_params)
-        params.update({k: v for k, v in kwargs.items() if k in self._get_optional_params()})
+        params.update({k: v for k, v in travel_request.items() if k in self._get_optional_params()})
 
         return params
-
-    def _validate_return_date(self, departure_date: str, return_date: str) -> str:
-        dep_date = datetime.strptime(departure_date, '%Y-%m-%d')
-        ret_date = datetime.strptime(return_date, '%Y-%m-%d')
-        if ret_date <= dep_date:
-            ret_date = dep_date + timedelta(days=1)
-        return ret_date.strftime('%Y-%m-%d')
 
     def _get_optional_params(self) -> list:
         return [
@@ -85,9 +105,22 @@ class FlightSearch:
     def _format_flight_results(self, best_flights: list) -> str:
         formatted_output = []
         for idx, flight_group in enumerate(best_flights, 1):
+            logger.debug(f"Processing flight group {idx}: {flight_group}")
             flight_details = []
-            for flight in flight_group.get("flights", []):
-                duration_hours, duration_minutes = divmod(flight["duration"], 60)
+            flights = flight_group.get("flights", [])
+            
+            if not flights:
+                logger.warning(f"No flights found in flight group {idx}")
+                continue
+            
+            first_flight = flights[0]
+            airline = first_flight.get("airline", "Unknown Airline")
+            price = flight_group.get("price", "N/A")
+            stops = len(flights) - 1
+            
+            for flight in flights:
+                logger.debug(f"Processing flight: {flight}")
+                duration_hours, duration_minutes = divmod(flight.get("duration", 0), 60)
                 departure_time = datetime.strptime(flight['departure_airport']['time'], '%Y-%m-%d %H:%M')
                 arrival_time = datetime.strptime(flight['arrival_airport']['time'], '%Y-%m-%d %H:%M')
                 formatted_departure = departure_time.strftime('%B %d at %H:%M')
@@ -97,10 +130,15 @@ class FlightSearch:
                     f"  - Arrival: {flight['arrival_airport']['name']} ({flight['arrival_airport']['id']}) on {formatted_arrival}\n"
                     f"  - Duration: {duration_hours}h {duration_minutes}m"
                 )
+            
             formatted_output.append(
-                f"{idx}. {flight_group['airline']} - ${flight_group['price']} - {len(flight_group.get('flights', [])) - 1} stop(s):\n" +
+                f"{idx}. {airline} - ${price} - {stops} stop(s):\n" +
                 "\n".join(flight_details)
             )
+        
+        if not formatted_output:
+            return "No flight results could be formatted."
+        
         return "\n\n".join(formatted_output)
 
 def create_flight_search() -> FlightSearch:

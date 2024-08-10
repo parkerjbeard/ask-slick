@@ -4,7 +4,6 @@ load_dotenv()
 
 import asyncio
 from app.slack_bot import create_slack_bot
-from app.services.travel.travel_planner import TravelPlanner
 from utils.logger import logger
 from app.assistants.assistant_manager import AssistantManager
 from app.assistants.dispatcher import Dispatcher
@@ -44,11 +43,8 @@ async def setup():
     # Update assistants
     await update_assistants()
 
-    # Initialize services
-    travel_planner = TravelPlanner()
-
     # Set up and initialize Slack app
-    slack_app = create_slack_bot(travel_planner)
+    slack_app = create_slack_bot()
     return slack_app
 
 def main():

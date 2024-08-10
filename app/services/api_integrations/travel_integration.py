@@ -1,6 +1,5 @@
 from typing import Dict, Any, List
 from app.services.api_integrations import APIIntegration
-from app.services.travel.travel_planner import TravelPlanner
 from app.services.travel.search_flight import FlightSearch
 from app.services.travel.search_hotel import HotelSearch
 from utils.logger import logger
@@ -22,13 +21,16 @@ class TravelIntegration(APIIntegration):
             return f"Unknown function: {function_name}"
 
     async def _search_flights(self, params: dict) -> str:
+        if not params:
+            return "No parameters provided for flight search"
+
         required_params = ["origin", "destination", "departure_date"]
         if not all(param in params for param in required_params):
             missing_params = [param for param in required_params if param not in params]
             return f"Missing required parameters for flight search: {', '.join(missing_params)}"
         
         try:
-            return self.flight_search.search_flights(**params)
+            return self.flight_search.search_flights(params)
         except Exception as e:
             logger.error(f"Error in flight search: {str(e)}", exc_info=True)
             return f"An error occurred during flight search: {str(e)}"

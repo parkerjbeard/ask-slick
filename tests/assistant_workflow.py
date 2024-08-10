@@ -13,7 +13,6 @@ load_dotenv()
 
 import asyncio
 from app.slack_bot import process_message_event
-from app.services.travel.travel_planner import TravelPlanner
 from app.assistants.assistant_manager import AssistantManager
 from app.assistants.dispatcher import Dispatcher
 from app.assistants.classifier import Classifier
@@ -76,10 +75,7 @@ async def interactive_test():
     await update_assistants()
 
     logger.debug("Initializing components...")
-    travel_planner = TravelPlanner()
-    assistant_manager = AssistantManager()
     dispatcher = Dispatcher()
-    classifier = Classifier(assistant_manager)
     slack_say = MockSlackSay()
     logger.debug(f"Components initialized in {time.time() - start_time:.2f} seconds")
 
@@ -103,7 +99,7 @@ async def interactive_test():
         logger.debug("\nProcessing message event...")
         process_start_time = time.time()
         try:
-            await process_message_event(event, slack_say, travel_planner, assistant_manager, dispatcher)
+            await process_message_event(event, slack_say, dispatcher)
             logger.debug(f"Message processed in {time.time() - process_start_time:.2f} seconds")
         except Exception as e:
             logger.error(f"Error processing message: {str(e)}", exc_info=True)

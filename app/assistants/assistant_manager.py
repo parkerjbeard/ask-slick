@@ -1,6 +1,7 @@
 from typing import Optional, List, Dict, Any
 import os
 import time
+import json
 from openai import OpenAI
 from utils.logger import logger
 from app.assistants.assistant_factory import AssistantFactory
@@ -10,6 +11,7 @@ class AssistantManager:
 
     def __init__(self):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self._assistant_cache = {}
 
     # Assistant management
     async def list_assistants(self) -> Dict[str, str]:
@@ -17,8 +19,6 @@ class AssistantManager:
         return {assistant.name: assistant.id for assistant in response.data}
 
     def retrieve_assistant(self, assistant_id: str) -> Any:
-        if not hasattr(self, '_assistant_cache'):
-            self._assistant_cache = {}
         if assistant_id not in self._assistant_cache:
             self._assistant_cache[assistant_id] = self.client.beta.assistants.retrieve(assistant_id)
         return self._assistant_cache[assistant_id]
@@ -48,7 +48,7 @@ class AssistantManager:
             model=model
         )
         return assistant.id
-        
+
     async def update_assistant(self, assistant_id: str, name: Optional[str] = None, 
                                description: Optional[str] = None, instructions: Optional[str] = None, 
                                tools: Optional[List[Dict[str, Any]]] = None) -> Any:
@@ -63,7 +63,7 @@ class AssistantManager:
         assistants = await self.list_assistants()
         return assistants.get(name)
 
-    # Thread and message management
+    # Thread management
     async def create_thread(self) -> Any:
         return self.client.beta.threads.create()
 
@@ -73,9 +73,6 @@ class AssistantManager:
             role=role,
             content=content
         )
-    
-    async def list_runs(self, thread_id: str) -> Any:
-        return self.client.beta.threads.runs.list(thread_id=thread_id)
 
     async def list_messages(self, thread_id: str, order: str = "asc", after: Optional[str] = None, limit: Optional[int] = None) -> Any:
         params = {
@@ -89,7 +86,7 @@ class AssistantManager:
         response = self.client.beta.threads.messages.list(**params)
         logger.debug(f"List messages response: {response}")
         return response
-    
+
     # Run management
     async def create_run(self, thread_id: str, assistant_id: str, instructions: Optional[str] = None) -> Any:
         assistant = self.retrieve_assistant(assistant_id)
@@ -101,6 +98,9 @@ class AssistantManager:
         if instructions:
             run_params["instructions"] = instructions
         return self.client.beta.threads.runs.create(**run_params)
+
+    async def list_runs(self, thread_id: str) -> Any:
+        return self.client.beta.threads.runs.list(thread_id=thread_id)
 
     def wait_on_run(self, thread_id: str, run_id: str) -> Any:
         while True:
@@ -146,3 +146,19 @@ class AssistantManager:
 
     async def handle_tool_call(self, run: Any) -> Any:
         return run.required_action.submit_tool_outputs.tool_calls[0]
+
+    # Structured completion
+    async def create_structured_completion(self, messages: list, assistant_name: str, function_name: str) -> dict:
+        json_schema = AssistantFactory.get_json_schema(assistant_name, function_name)
+        response = self.client.chat.completions.create(
+            model="gpt-4o-2024-08-06",
+            messages=messages,
+            response_format={
+                "type": "json_schema",
+                "json_schema": {
+                    "name": f"{assistant_name}_{function_name}_schema",
+                    "schema": json_schema
+                }
+            }
+        )
+        return json.loads(response.choices[0].message.content)
