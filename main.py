@@ -8,15 +8,18 @@ from utils.logger import logger
 from app.assistants.assistant_manager import AssistantManager
 from app.assistants.dispatcher import Dispatcher
 from app.assistants.assistant_factory import AssistantFactory
+from app.google_client import initialize_google_auth  # Add this import
+from app.config.assistant_config import AssistantConfig, AssistantCategory
 
 async def update_assistants():
+    logger.debug("Updating assistants...")
     assistant_manager = AssistantManager()
     dispatcher = Dispatcher()
     assistant_factory = AssistantFactory()
     
     assistants = await assistant_manager.list_assistants()
     
-    for assistant_name in ["TravelAssistant", "EmailAssistant", "GeneralAssistant", "ClassifierAssistant", "ScheduleAssistant", "FamilyAssistant", "TodoAssistant", "DocumentAssistant"]:
+    for assistant_name in AssistantConfig.get_all_assistant_names():
         assistant_id = assistants.get(assistant_name)
         tools, model = assistant_factory.get_tools_for_assistant(assistant_name)
         instructions = assistant_factory.get_assistant_instructions(assistant_name)
@@ -27,19 +30,24 @@ async def update_assistants():
                 instructions=instructions,
                 tools=tools
             )
-            logger.info(f"Updated {assistant_name} with new tools and instructions")
+            logger.debug(f"Updated {assistant_name} with new tools and instructions")
         else:
-            logger.info(f"{assistant_name} not found, creating a new one")
+            logger.debug(f"{assistant_name} not found, creating a new one")
             new_assistant = await assistant_manager.create_assistant(
                 name=assistant_name,
                 instructions=instructions,
                 tools=tools,
                 model=model
             )
-            if assistant_name == "ClassifierAssistant":
+            if assistant_name == AssistantConfig.ASSISTANT_NAMES[AssistantCategory.CLASSIFIER]:
                 dispatcher.classifier_assistant_id = new_assistant.id
+    
+    logger.debug("Assistants update completed")
 
 async def setup():
+
+    # Initialize Google authentication
+    initialize_google_auth() 
     # Update assistants
     await update_assistants()
 

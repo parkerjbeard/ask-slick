@@ -1,22 +1,25 @@
 from typing import Dict, Any, Tuple, List
 from app.services.api_integrations.travel_integration import TravelIntegration
 from functools import lru_cache
+from app.services.api_integrations.calendar_integration import CalendarIntegration
+from app.services.api_integrations.gmail_integration import GmailIntegration
+from app.config.assistant_config import AssistantConfig
 
 class AssistantFactory:
     @staticmethod
     def get_assistant_name(category: str) -> str:
-        return {
-            "travel": "TravelAssistant",
-            "schedule": "ScheduleAssistant",
-            "family": "FamilyAssistant",
-            "todo": "TodoAssistant",
-            "document": "DocumentAssistant"
-        }.get(category, "GeneralAssistant")
+        return AssistantConfig.get_assistant_name(category)
     
     @staticmethod
     def get_api_integration(name: str) -> Any:
         if name == "TravelAssistant":
             return TravelIntegration()
+        elif name == "CalendarAssistant":
+            return CalendarIntegration()
+        elif name == "GmailAssistant":
+            return GmailIntegration()
+        # elif name == "ScheduleEmailAssistant":
+        #     return ScheduleEmailIntegration()
         # Add other API integrations as they are created
         return None
 
@@ -64,6 +67,75 @@ class AssistantFactory:
                     },
                     "required": ["location", "check_in", "check_out"]
                 }
+            
+        elif name == "CalendarAssistant":
+            if function_name == "check_available_slots":
+                return {
+                    "type": "object",
+                    "properties": {
+                        "start_date": {"type": "string", "format": "date"},
+                        "end_date": {"type": "string", "format": "date"},
+                        "duration": {"type": "integer"},
+                        "timezone": {"type": "string"}
+                    },
+                    "required": ["start_date", "end_date", "duration"]
+                }
+            elif function_name == "create_event":
+                return {
+                    "type": "object",
+                    "properties": {
+                        "summary": {"type": "string"},
+                        "start_time": {"type": "string", "format": "date-time"},
+                        "end_time": {"type": "string", "format": "date-time"},
+                        "description": {"type": "string"},
+                        "location": {"type": "string"},
+                        "timezone": {"type": "string"}
+                    },
+                    "required": ["summary", "start_time", "end_time"]
+                }
+            elif function_name == "update_event":
+                return {
+                    "type": "object",
+                    "properties": {
+                        "event_id": {"type": "string"},
+                        "summary": {"type": "string"},
+                        "start_time": {"type": "string", "format": "date-time"},
+                        "end_time": {"type": "string", "format": "date-time"},
+                        "description": {"type": "string"},
+                        "location": {"type": "string"}
+                    },
+                    "required": ["event_id"]
+                }
+            elif function_name == "delete_event":
+                return {
+                    "type": "object",
+                    "properties": {
+                        "event_id": {"type": "string"}
+                    },
+                    "required": ["event_id"]
+                }
+
+            elif name == "GmailAssistant":
+                if function_name == "send_email":
+                    return {
+                        "type": "object",
+                        "properties": {
+                            "to": {"type": "string", "description": "Recipient email address"},
+                            "subject": {"type": "string", "description": "Email subject"},
+                            "body": {"type": "string", "description": "Email body content"}
+                        },
+                        "required": ["to", "subject", "body"]
+                    }
+                elif function_name == "create_draft":
+                    return {
+                        "type": "object",
+                        "properties": {
+                            "to": {"type": "string", "description": "Recipient email address"},
+                            "subject": {"type": "string", "description": "Email subject"},
+                            "body": {"type": "string", "description": "Email body content"}
+                        },
+                        "required": ["to", "subject", "body"]
+                    }
         # Add schemas for other assistant types
         return {
             "type": "object",
