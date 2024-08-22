@@ -42,7 +42,7 @@ class SlackMessageFormatter:
         3. Use "type": "divider" to separate major sections.
         4. Use "type": "context" for additional information or metadata.
         5. Properly escape any special characters in the text.
-        6. Use Slack's mrkdwn format for text styling (e.g., *bold*, _italic_, ~strikethrough~).
+        6. Use Slack's mrkdwn format for text styling (e.g., *bold*, ~strikethrough~). Do not use italics.
         7. If there are clear lists or steps, format them as numbered or bulleted lists.
         8. For any links, use the format <URL|text> in mrkdwn.
         9. Keep each text block under 3000 characters to comply with Slack's limits.

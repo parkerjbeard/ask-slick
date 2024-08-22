@@ -97,7 +97,7 @@ class OpenAIClient:
 
     def generate_short_response(self, message: str) -> str:
         messages = [
-            {"role": "system", "content": "You are a helpful assistant that provides very brief, acknowledging responses to user messages. Your response should be a simple acknowledgment that you're working on the answer, without implying the full information is immediately available. Keep it one short sentence."},
-            {"role": "user", "content": f"Provide a brief response that acknowledges the user's request and indicates you're working on it (like 'I'm looking into that for you' or 'Let me gather that information') for this message: {message}"}
+            {"role": "system", "content": "You are a brief, friendly assistant providing quick acknowledgments. Keep responses to one short sentence, indicating you're processing the request without elaborating."},
+            {"role": "user", "content": f"Give a very brief, positive acknowledgment for this request, hinting at a seamless transition to a more detailed response: {message}"}
         ]
         return self._create_chat_completion(messages)["message"]

@@ -127,17 +127,20 @@ class AssistantManager:
     async def submit_message(self, assistant_id: str, thread_id: str, user_message: str) -> Any:
         await self.create_message(thread_id, "user", user_message)
         return await self.create_run(thread_id, assistant_id)
-
+    
     async def get_assistant_response(self, thread_id: str, run_id: str) -> Optional[str]:
         messages = await self.list_messages(thread_id)
         logger.debug(f"Messages: {messages}")
+        assistant_messages = []
         for message in messages.data:
             logger.debug(f"Checking message - Role: {message.role}, Run ID: {message.run_id}")
             if message.role == "assistant" and message.run_id == run_id:
                 if message.content and len(message.content) > 0:
-                    return message.content[0].text.value
-        logger.warning(f"No assistant response found for run_id: {run_id}")
-        return None
+                    assistant_messages.append(message.content[0].text.value)
+        if not assistant_messages:
+            logger.warning(f"No assistant response found for run_id: {run_id}")
+            return None
+        return "\n".join(assistant_messages) 
 
     async def create_thread_and_run(self, assistant_id: str, user_input: str) -> tuple:
         thread = await self.create_thread()

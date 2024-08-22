@@ -94,26 +94,6 @@ async def process_message_event(event, say, dispatcher):
         logger.error(f"Traceback: {traceback.format_exc()}")
         await say(text=f"I'm sorry, but I encountered an error while processing your request: {str(e)}\nPlease try again later.", channel=channel)
 
-
-async def handle_tool_call(tool_call):
-    function_name = tool_call.function.name
-    function_args = json.loads(tool_call.function.arguments)
-    search_flight = FlightSearch()
-    search_hotel = HotelSearch()
-
-    logger.debug(f"Handling tool call - Function: {function_name}, Arguments: {function_args}")
-    
-    if function_name == "search_flights":
-        result = await search_flight.search_flights(function_args)
-    elif function_name == "search_hotels":
-        result = await search_hotel.search_hotels(function_args)
-    else:
-        logger.warning(f"Unknown function: {function_name}")
-        result = f"Unknown function: {function_name}"
-    
-    logger.debug(f"Tool call result: {result}")
-    return json.dumps(result)
-
 async def send_slack_response(say, assistant_response, tool_responses, channel):
     logger.debug(f"Sending Slack response - Channel: {channel}, Response: {assistant_response}")
     

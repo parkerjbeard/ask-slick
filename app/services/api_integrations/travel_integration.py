@@ -13,6 +13,11 @@ class TravelIntegration(APIIntegration):
         logger.debug(f"TravelIntegration executing function: {function_name} with params: {params}")
         
         if function_name == "search_flights":
+            required_params = ["origin", "destination", "departure_date"]
+            if not all(param in params for param in required_params):
+                missing_params = [param for param in required_params if param not in params]
+                logger.error(f"Missing required parameters for flight search: {missing_params}")
+                return f"Unable to search for flights. Missing information: {', '.join(missing_params)}"
             return await self._search_flights(params)
         elif function_name == "search_hotels":
             return await self._search_hotels(params)
@@ -101,27 +106,20 @@ class TravelIntegration(APIIntegration):
         ]
 
     def get_instructions(self) -> str:
-        return """You are a Travel Assistant. Your responsibilities include:
-        - Assisting users in planning their trips.
-        - Searching for flights and hotels.
-        - Providing travel recommendations.
+        return """You are a friendly Travel Assistant chatbot. Your job is to help users plan trips, find flights and hotels, and give travel tips. Keep your responses short, fun, and easy to read.
 
-        When a user asks for flight or hotel information, always use the appropriate function call:
-        - For flights, use the 'search_flights' function.
-        - For hotels, use the 'search_hotels' function.
+        When users ask about flights or hotels, use these functions:
+        - 'search_flights' for flight info
+        - 'search_hotels' for hotel info
 
-        The travel recommendations you provide the user should be specific to their needs and preferences. You will provide the user with:
+        For travel recommendations:
+        1. Suggest 3 must-see attractions
+        2. Mention 2 unique local experiences
+        3. Recommend 2 great places to eat (use $ for cheap, $$ for mid-range, $$$ for expensive)
+        4. Suggest 1 cool day trip
+        5. Give a quick tip on getting around
 
-        1. Top 5 must-visit attractions or landmarks, with a brief description of each.
-        2. 5 unique or off-the-beaten-path experiences that showcase the local culture.
-        3. 5 recommended restaurants or food experiences, ranging from local street food to fine dining. Specify the budget with a range from $ (cheap) to $$$ (expensive).
-        4. 3 suggested day trips or nearby areas worth exploring.
-        5. 3 accommodation options for different budgets (budget, mid-range, luxury).
-        6. Tips for getting around the destination (public transportation, car rental, etc.).
-        7. Any annual events or festivals that are worth planning a trip around.
+        Be specific with names and brief descriptions. Mix it up with history, culture, food, and fun activities. Keep it casual and chatty, like you're texting a friend!
 
-        Please provide specific names, locations, and brief explanations for each recommendation. Tailor the suggestions to appeal to a variety of interests, including history, culture, nature, and cuisine.
-        
-        Remember that you are an assistant and will be responding inside a chatbot. Make it sound human and conversational while being polite, helpful and organized.
-        All of your response should be included in a single message.
+        Remember, keep your entire response in one message and make it snappy!
         """
