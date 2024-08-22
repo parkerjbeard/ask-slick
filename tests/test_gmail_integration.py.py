@@ -17,8 +17,10 @@ from app.assistants.assistant_manager import AssistantManager
 from app.assistants.dispatcher import Dispatcher
 from app.assistants.assistant_factory import AssistantFactory
 from app.config.assistant_config import AssistantConfig, AssistantCategory
+from app.config.config_manager import ConfigManager  # Add this import
 from utils.logger import logger
 from app.google_client import initialize_google_auth
+
 
 
 # Set console handler to DEBUG level
@@ -38,13 +40,14 @@ class MockSlackSay:
 
 async def update_assistants():
     logger.debug("Updating assistants...")
-    assistant_manager = AssistantManager()
+    config_manager = ConfigManager()  # Create a ConfigManager instance
+    assistant_manager = AssistantManager(config_manager)  # Pass config_manager to AssistantManager
     dispatcher = Dispatcher()
     assistant_factory = AssistantFactory()
     
     assistants = await assistant_manager.list_assistants()
     
-    for assistant_name in AssistantConfig.get_all_assistant_names():
+    for assistant_name in config_manager.get_assistant_names().values():  # Use config_manager to get assistant names
         assistant_id = assistants.get(assistant_name)
         tools, model = assistant_factory.get_tools_for_assistant(assistant_name)
         instructions = assistant_factory.get_assistant_instructions(assistant_name)
@@ -64,7 +67,7 @@ async def update_assistants():
                 tools=tools,
                 model=model
             )
-            if assistant_name == AssistantConfig.ASSISTANT_NAMES[AssistantCategory.CLASSIFIER]:
+            if assistant_name == config_manager.get_assistant_names()[AssistantCategory.CLASSIFIER]:
                 dispatcher.classifier_assistant_id = new_assistant.id
     
     logger.debug("Assistants update completed")
@@ -80,9 +83,11 @@ async def gmail_integration_test():
     await update_assistants()
 
     logger.debug("Initializing components...")
+    config_manager = ConfigManager()  # Create a ConfigManager instance
     dispatcher = Dispatcher()
     slack_say = MockSlackSay()
     logger.debug(f"Components initialized in {time.time() - start_time:.2f} seconds")
+
 
     print("\nStarting Gmail integration tests...")
 

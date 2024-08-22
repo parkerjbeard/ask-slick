@@ -1,2 +1,4 @@
 .env
 logs/app.log
+credentials.json
+token.json

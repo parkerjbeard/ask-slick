@@ -5,13 +5,13 @@ import json
 from openai import OpenAI
 from utils.logger import logger
 from app.assistants.assistant_factory import AssistantFactory
+from app.config.config_manager import ConfigManager
 
 class AssistantManager:
-    """A class to manage OpenAI assistants and threads."""
-
-    def __init__(self):
+    def __init__(self, config_manager: ConfigManager):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self._assistant_cache = {}
+        self.config_manager = config_manager
 
     # Assistant management
     async def list_assistants(self) -> Dict[str, str]:
@@ -162,3 +162,11 @@ class AssistantManager:
             }
         )
         return json.loads(response.choices[0].message.content)
+
+    async def get_assistant_id_by_name(self, name: str) -> Optional[str]:
+        assistants = await self.list_assistants()
+        assistant_names = self.config_manager.get_assistant_names()
+        for category, assistant_name in assistant_names.items():
+            if assistant_name == name:
+                return assistants.get(name)
+        return None

@@ -1,18 +1,28 @@
 from app.assistants.assistant_manager import AssistantManager
 from app.config.assistant_config import AssistantCategory, AssistantConfig
+from app.config.config_manager import ConfigManager
 
 class Classifier:
-    def __init__(self, assistant_manager: AssistantManager):
+    def __init__(self, assistant_manager: AssistantManager, config_manager: ConfigManager):
         self.assistant_manager = assistant_manager
+        self.config_manager = config_manager
         self.classifier_assistant_id = None
         self.thread_id = None
         self.categories = [category.value for category in AssistantCategory if category != AssistantCategory.CLASSIFIER]
 
     async def initialize(self):
         assistants = await self.assistant_manager.list_assistants()
-        self.classifier_assistant_id = assistants.get(AssistantConfig.ASSISTANT_NAMES[AssistantCategory.CLASSIFIER])
+        classifier_name = AssistantConfig.get_assistant_name(AssistantCategory.CLASSIFIER)
+        self.classifier_assistant_id = assistants.get(classifier_name)
         if not self.classifier_assistant_id:
-            raise ValueError(f"{AssistantConfig.ASSISTANT_NAMES[AssistantCategory.CLASSIFIER]} not found. Please run update_assistants() first.")
+            # Create the classifier assistant if it doesn't exist
+            classifier_config = AssistantConfig.CONFIGS[AssistantCategory.CLASSIFIER]
+            self.classifier_assistant_id = await self.assistant_manager.create_assistant(
+                name=classifier_name,
+                instructions=classifier_config.SYSTEM_MESSAGE,
+                tools=[],
+                model="gpt-4o-mini"
+            )
 
 
     async def classify_message(self, user_input: str) -> str:

@@ -9,15 +9,16 @@ import traceback
 from app.openai_helper import OpenAIClient
 from app.services.travel.search_flight import FlightSearch
 from app.services.travel.search_hotel import HotelSearch
+from app.config.config_manager import ConfigManager  # Add this import
 
-def create_slack_bot():
+def create_slack_bot(config_manager: ConfigManager):
     logger.debug("Creating Slack bot")
     app = AsyncApp(
         token=os.environ.get("SLACK_BOT_TOKEN"),
         signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
     )
 
-    assistant_manager = AssistantManager()
+    assistant_manager = AssistantManager(config_manager)
     dispatcher = Dispatcher()
 
     @app.event("message")

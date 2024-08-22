@@ -10,19 +10,21 @@ from app.assistants.dispatcher import Dispatcher
 from app.assistants.assistant_factory import AssistantFactory
 from app.google_client import initialize_google_auth  # Add this import
 from app.config.assistant_config import AssistantConfig, AssistantCategory
+from app.config.config_manager import ConfigManager  # Add this import
 
-async def update_assistants():
+async def update_assistants(config_manager):
     logger.debug("Updating assistants...")
-    assistant_manager = AssistantManager()
+    assistant_manager = AssistantManager(config_manager)
     dispatcher = Dispatcher()
     assistant_factory = AssistantFactory()
     
     assistants = await assistant_manager.list_assistants()
     
-    for assistant_name in AssistantConfig.get_all_assistant_names():
+    for assistant_name in config_manager.get_assistant_names().values():  # Use config_manager to get assistant names
         assistant_id = assistants.get(assistant_name)
         tools, model = assistant_factory.get_tools_for_assistant(assistant_name)
         instructions = assistant_factory.get_assistant_instructions(assistant_name)
+        
         
         if assistant_id:
             await assistant_manager.update_assistant(
@@ -39,20 +41,21 @@ async def update_assistants():
                 tools=tools,
                 model=model
             )
-            if assistant_name == AssistantConfig.ASSISTANT_NAMES[AssistantCategory.CLASSIFIER]:
+            if assistant_name == config_manager.get_assistant_names()[AssistantCategory.CLASSIFIER]:
                 dispatcher.classifier_assistant_id = new_assistant.id
-    
-    logger.debug("Assistants update completed")
+        
+        logger.debug("Assistants update completed")
 
 async def setup():
-
     # Initialize Google authentication
     initialize_google_auth() 
+
+    config_manager = ConfigManager()
     # Update assistants
-    await update_assistants()
+    await update_assistants(config_manager)
 
     # Set up and initialize Slack app
-    slack_app = create_slack_bot()
+    slack_app = create_slack_bot(config_manager)
     return slack_app
 
 def main():

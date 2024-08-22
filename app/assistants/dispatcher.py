@@ -10,24 +10,24 @@ from typing import List
 from app.openai_helper import OpenAIClient
 from app.services.travel.search_flight import FlightSearch
 from app.services.calendar.calendar_manager import CalendarManager
+from app.config.config_manager import ConfigManager
+from app.config.assistant_config import AssistantCategory, AssistantConfig
 
 class Dispatcher:
     def __init__(self):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-        self.assistant_manager = AssistantManager()
-        self.classifier = Classifier(self.assistant_manager)
-        self.thread_id = None
+        self.config_manager = ConfigManager()
+        self.assistant_manager = AssistantManager(self.config_manager)
+        self.classifier = Classifier(self.assistant_manager, self.config_manager)
         self.current_category = None
-        self.openai_helper = OpenAIClient()
-        self.search_flight = FlightSearch()
-        self.calendar_manager = CalendarManager()
+        self.thread_id = None 
 
     async def dispatch(self, user_input: str) -> dict:
         try:
             logger.info(f"Starting dispatch for user input: {user_input}")
             
             self.current_category = await self.classifier.classify_message(user_input)
-            assistant_name = AssistantFactory.get_assistant_name(self.current_category)
+            
+            assistant_name = AssistantConfig.get_assistant_name(self.current_category)
             logger.info(f"Selected assistant: {assistant_name}")
             
             chat_history = await self.get_chat_history()
@@ -73,20 +73,10 @@ class Dispatcher:
         function_outputs = []
         for tool_call in tool_calls:
             function_name = tool_call.function.name
+            category = AssistantCategory(self.current_category)
             
-            if function_name in ["search_flights", "search_hotels"]:
-                travel_structured_data = await self.get_structured_travel_request(user_input, chat_history, function_name)
-                processed_request = self.search_flight._process_travel_request(travel_structured_data)
-                result = await self.call_function(function_name, processed_request)
-            elif function_name in ["check_available_slots", "create_event", "update_event", "delete_event"]:
-                calendar_structured_data = await self.get_structured_calendar_request(user_input, chat_history, function_name)
-                result = await self.call_function(function_name, calendar_structured_data)
-            elif function_name in ["send_email", "create_draft"]:
-                email_structured_data = await self.get_structured_email_request(user_input, chat_history, function_name)
-                result = await self.call_function(function_name, email_structured_data)
-            else:
-                function_args = json.loads(tool_call.function.arguments)
-                result = await self.call_function(function_name, function_args)
+            structured_data = await self.get_structured_request(category, user_input, chat_history, function_name)
+            result = await self.call_function(function_name, structured_data)
             
             function_outputs.append({
                 "tool_call_id": tool_call.id,
@@ -94,64 +84,31 @@ class Dispatcher:
             })
         return function_outputs
 
-    async def get_structured_travel_request(self, user_input: str, chat_history: List[str], function_name: str) -> dict:
-        # Prepare the chat history context
-        history_context = "\n".join(chat_history[-10:])  # Use the last 10 messages for context
-        
-        messages = [
-            {"role": "system", "content": """You are a travel assistant parsing travel requests. 
-            When extracting information, follow these rules:
-            1. For origin and destination, always use 3-letter IATA airport codes.
-            2. If a specific airport is not mentioned, use the main airport code for the given city, state, or country.
-               For example:
-               - New York -> JFK (John F. Kennedy International Airport)
-               - California -> LAX (Los Angeles International Airport)
-               - Japan -> NRT (Narita International Airport)
-            3. If the origin is not specified at all, use 'NULL' as the value.
-            4. For all other fields, if the information is not provided, leave the field empty.
-            5. Always include all fields in the output, even if they are empty.
-            6. Use the chat history as context to infer any missing information.
-            7. If you're unsure about the correct airport code, use your best judgment to provide the most likely code for the main airport in that location."""},
-            {"role": "user", "content": f"Chat history:\n{history_context}\n\nParse the following travel request for {function_name}, using the chat history as context:\n\n{user_input}"}
-        ]
-        return await self.assistant_manager.create_structured_completion(messages, "TravelAssistant", function_name)
+    def get_integration_type(self, function_name: str) -> str:
+        for category, functions in AssistantConfig.CATEGORY_FUNCTIONS.items():
+            if function_name in functions:
+                return category.value
+        return AssistantCategory.GENERAL.value
 
-    async def get_structured_calendar_request(self, user_input: str, chat_history: List[str], function_name: str) -> dict:
-        history_context = "\n".join(chat_history[-10:])  # Use the last 10 messages for context
-        
-        messages = [
-            {"role": "system", "content": """You are a calendar assistant parsing calendar requests. 
-            When extracting information, follow these rules:
-            1. For dates and times, use ISO 8601 format (YYYY-MM-DDTHH:MM:SS).
-            2. If a specific time is not mentioned, use 00:00:00 as the default time.
-            3. If the information is not provided, leave the field empty.
-            4. Always include all fields in the output, even if they are empty.
-            5. Use the chat history as context to infer any missing information.
-            6. For event IDs, if not explicitly mentioned, use 'NULL' as the value."""},
-            {"role": "user", "content": f"Chat history:\n{history_context}\n\nParse the following calendar request for {function_name}, using the chat history as context:\n\n{user_input}"}
-        ]
-        return await self.assistant_manager.create_structured_completion(messages, "CalendarAssistant", function_name)
+    def get_category_from_assistant_name(self, assistant_name: str) -> AssistantCategory:
+        for category, config in AssistantConfig.CONFIGS.items():
+            if config.ASSISTANT_NAME == assistant_name:
+                return category
+        return AssistantCategory.GENERAL
 
-    async def get_structured_email_request(self, user_input: str, chat_history: List[str], function_name: str) -> dict:
-        history_context = "\n".join(chat_history[-10:])  # Use the last 10 messages for context
-        
-        messages = [
-            {"role": "system", "content": """You are an email assistant parsing email requests. 
-            When extracting information, follow these rules:
-            1. Always extract the recipient's email address. If not provided, use 'example@example.com'.
-            2. Always generate a suitable subject line based on the content.
-            3. Always compose an appropriate email body based on the user's request.
-            4. If any information is missing or unclear, use your best judgment to fill in the gaps.
-            5. Always include 'to', 'subject', and 'body' fields in the output."""},
-            {"role": "user", "content": f"Chat history:\n{history_context}\n\nParse the following email request for {function_name}, using the chat history as context:\n\n{user_input}"}
-        ]
-        return await self.assistant_manager.create_structured_completion(messages, "GmailAssistant", function_name)
+    async def get_structured_request(self, category: AssistantCategory, user_input: str, chat_history: List[str], function_name: str) -> dict:
+        config = self.config_manager.get_config(category)
+        if not config:
+            raise ValueError(f"No configuration found for category: {category}")
+
+        history_context = "\n".join(chat_history[-10:])
+        messages = config.get_messages(history_context, user_input, function_name)
+        return await self.assistant_manager.create_structured_completion(messages, category.value, function_name)
 
     async def call_function(self, function_name: str, function_params: dict) -> str:
         logger.debug(f"Executing function: {function_name} with parameters: {function_params}")
         
-        assistant_name = AssistantFactory.get_assistant_name(self.current_category)
-        integration = AssistantFactory.get_api_integration(assistant_name)
+        integration = AssistantFactory.get_api_integration(AssistantConfig.get_assistant_name(self.current_category))
         
         if integration:
             return await integration.execute(function_name, function_params)
@@ -164,12 +121,14 @@ class Dispatcher:
         messages = await self.assistant_manager.list_messages(self.thread_id, limit=10, order="desc")
         return [f"{msg.role}: {msg.content[0].text.value}" for msg in reversed(messages.data)]
 
-    async def call_functions(self, travel_structured_data: dict) -> list:
-        tools = AssistantFactory.get_tools_for_assistant("TravelAssistant")[0]
-        messages = [{"role": "user", "content": json.dumps(travel_structured_data)}]
+    async def call_functions(self, structured_data: dict) -> list:
+        category = self.current_category
+        assistant_name = AssistantConfig.get_assistant_name(category.value)
+        tools = AssistantFactory.get_tools_for_assistant(assistant_name)[0]
+        messages = [{"role": "user", "content": json.dumps(structured_data)}]
         
         response = self.client.chat.completions.create(
-            model="gpt-4o",
+            model="gpt-4",
             messages=messages,
             tools=tools,
             tool_choice="auto",
