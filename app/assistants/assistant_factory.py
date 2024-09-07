@@ -112,7 +112,7 @@ class AssistantFactory:
                     "properties": {
                         "event_id": {"type": "string"}
                     },
-                    "required": ["event_id"]
+                    "required": ["api_name", "function_name", "function_params"]
                 }
 
             elif name == "GmailAssistant":
