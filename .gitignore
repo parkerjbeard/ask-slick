@@ -2,3 +2,10 @@
 logs/app.log
 credentials.json
 token.json
+
+# Ignore user logs and Cython logs
+logs/
+*.log
+*.log.*
+*.c
+*.so
