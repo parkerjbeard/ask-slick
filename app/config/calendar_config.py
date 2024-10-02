@@ -8,9 +8,10 @@ class CalendarConfig(BaseConfig):
     3. If the information is not provided, leave the field empty.
     4. Always include all fields in the output, even if they are empty.
     5. Use the chat history as context to infer any missing information.
-    6. For event IDs, if not explicitly mentioned, use 'NULL' as the value."""
+    6. For event IDs, if not explicitly mentioned, use 'NULL' as the value.
+    7. For time zones, if not explicitly mentioned, use 'NULL' as the value."""
 
-    CATEGORY = "schedule"
+    CATEGORY = "calendar"
     ASSISTANT_NAME = "CalendarAssistant"
     CATEGORY_DESCRIPTION = "Messages about appointments, meetings, or time-specific events that don't involve sending emails."
     FUNCTIONS = ["check_available_slots", "create_event", "update_event", "delete_event"]

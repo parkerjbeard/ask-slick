@@ -1,6 +1,6 @@
-from typing import Dict, Any, List
-from app.services.api_integrations import APIIntegration
 from app.services.gmail.gmail_manager import GmailManager
+from app.services.api_integrations import APIIntegration
+from typing import Dict, Any, List
 from utils.logger import logger
 
 class GmailIntegration(APIIntegration):
@@ -43,8 +43,10 @@ class GmailIntegration(APIIntegration):
                             "body": {"type": "string", "description": "Email body content"},
                             "attachments": {"type": "array", "items": {"type": "string"}, "description": "List of file paths to attach"}
                         },
-                        "required": ["to", "subject", "body"]
-                    }
+                        "required": ["to", "subject", "body"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             },
             {
@@ -60,8 +62,10 @@ class GmailIntegration(APIIntegration):
                             "body": {"type": "string", "description": "Email body content"},
                             "attachments": {"type": "array", "items": {"type": "string"}, "description": "List of file paths to attach"}
                         },
-                        "required": ["to", "subject", "body"]
-                    }
+                        "required": ["to", "subject", "body"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             }
         ]

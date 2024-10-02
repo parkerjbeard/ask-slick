@@ -7,9 +7,7 @@ from utils.logger import logger
 from utils.slack_formatter import SlackMessageFormatter
 import traceback
 from app.openai_helper import OpenAIClient
-from app.services.travel.search_flight import FlightSearch
-from app.services.travel.search_hotel import HotelSearch
-from app.config.config_manager import ConfigManager  # Add this import
+from app.config.config_manager import ConfigManager
 
 def create_slack_bot(config_manager: ConfigManager):
     logger.debug("Creating Slack bot")

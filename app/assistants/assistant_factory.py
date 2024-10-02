@@ -1,9 +1,9 @@
-from typing import Dict, Any, Tuple, List
-from app.services.api_integrations.travel_integration import TravelIntegration
-from functools import lru_cache
 from app.services.api_integrations.calendar_integration import CalendarIntegration
+from app.services.api_integrations.travel_integration import TravelIntegration
 from app.services.api_integrations.gmail_integration import GmailIntegration
 from app.config.assistant_config import AssistantConfig
+from typing import Dict, Any, Tuple, List
+from utils.logger import logger
 
 class AssistantFactory:
     @staticmethod
@@ -18,8 +18,6 @@ class AssistantFactory:
             return CalendarIntegration()
         elif name == "GmailAssistant":
             return GmailIntegration()
-        # elif name == "ScheduleEmailAssistant":
-        #     return ScheduleEmailIntegration()
         # Add other API integrations as they are created
         return None
 
@@ -28,11 +26,12 @@ class AssistantFactory:
         integration = AssistantFactory.get_api_integration(name)
         if integration:
             tools = integration.get_tools()
+            logger.debug(f"Tools: {tools}")
             for tool in tools:
                 if tool['type'] == 'function':
                     tool['function']['parameters'] = AssistantFactory.get_json_schema(name, tool['function']['name'])
-            return tools, "gpt-4o-mini"
-        return [], "gpt-4o-mini"
+            return tools, "gpt-4o"
+        return [], "gpt-4o"
 
     @staticmethod
     def get_assistant_instructions(name: str) -> str:
@@ -112,29 +111,29 @@ class AssistantFactory:
                     "properties": {
                         "event_id": {"type": "string"}
                     },
-                    "required": ["api_name", "function_name", "function_params"]
+                    "required": ["event_id"]
                 }
 
-            elif name == "GmailAssistant":
-                if function_name == "send_email":
-                    return {
-                        "type": "object",
-                        "properties": {
-                            "to": {"type": "string", "description": "Recipient email address"},
-                            "subject": {"type": "string", "description": "Email subject"},
-                            "body": {"type": "string", "description": "Email body content"}
-                        },
-                        "required": ["to", "subject", "body"]
-                    }
-                elif function_name == "create_draft":
-                    return {
-                        "type": "object",
-                        "properties": {
-                            "to": {"type": "string", "description": "Recipient email address"},
-                            "subject": {"type": "string", "description": "Email subject"},
-                            "body": {"type": "string", "description": "Email body content"}
-                        },
-                        "required": ["to", "subject", "body"]
+        elif name == "GmailAssistant":
+            if function_name == "send_email":
+                return {
+                    "type": "object",
+                    "properties": {
+                        "to": {"type": "string", "description": "Recipient email address"},
+                        "subject": {"type": "string", "description": "Email subject"},
+                        "body": {"type": "string", "description": "Email body content"}
+                    },
+                    "required": ["to", "subject", "body"]
+                }
+            elif function_name == "create_draft":
+                return {
+                    "type": "object",
+                    "properties": {
+                        "to": {"type": "string", "description": "Recipient email address"},
+                        "subject": {"type": "string", "description": "Email subject"},
+                        "body": {"type": "string", "description": "Email body content"}
+                    },
+                    "required": ["to", "subject", "body"]
                     }
         # Add schemas for other assistant types
         return {

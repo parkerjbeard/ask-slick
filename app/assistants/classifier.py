@@ -1,5 +1,5 @@
-from app.assistants.assistant_manager import AssistantManager
 from app.config.assistant_config import AssistantCategory, AssistantConfig
+from app.assistants.assistant_manager import AssistantManager
 from app.config.config_manager import ConfigManager
 
 class Classifier:
@@ -71,7 +71,7 @@ class Classifier:
         4. Your response should be a single word (the category name in lowercase).
 
         Example classifications:
-        - "What time is my dentist appointment?" -> {AssistantCategory.SCHEDULE.value}
+        - "What time is my dentist appointment?" -> {AssistantCategory.CALENDAR.value}
         - "Book a flight to New York for next week" -> {AssistantCategory.TRAVEL.value}
         - "Remind me to call mom tonight" -> {AssistantCategory.FAMILY.value} (primary intent) or {AssistantCategory.TODO.value} (secondary intent)
         - "Create a report on Q2 sales" -> {AssistantCategory.DOCUMENT.value}

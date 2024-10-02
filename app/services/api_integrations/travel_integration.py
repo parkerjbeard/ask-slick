@@ -1,7 +1,7 @@
-from typing import Dict, Any, List
-from app.services.api_integrations import APIIntegration
 from app.services.travel.search_flight import FlightSearch
 from app.services.travel.search_hotel import HotelSearch
+from app.services.api_integrations import APIIntegration
+from typing import Dict, Any, List
 from utils.logger import logger
 
 class TravelIntegration(APIIntegration):
@@ -75,8 +75,10 @@ class TravelIntegration(APIIntegration):
                             "stops": {"type": "string", "description": "Number of stops (e.g., '0' for non-stop, '1' for one stop)"},
                             "max_price": {"type": "string", "description": "Maximum price for flights"}
                         },
-                        "required": ["origin", "destination", "departure_date"]
-                    }
+                        "required": ["origin", "destination", "departure_date"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             },
             {
@@ -99,8 +101,10 @@ class TravelIntegration(APIIntegration):
                             "amenities": {"type": "string", "description": "Comma-separated list of desired amenities"},
                             "property_types": {"type": "string", "description": "Comma-separated list of desired property types"}
                         },
-                        "required": ["destination", "check_in", "check_out"]
-                    }
+                        "required": ["destination", "check_in", "check_out"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             }
         ]

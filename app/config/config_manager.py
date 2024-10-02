@@ -7,7 +7,7 @@ class ConfigManager:
     def __init__(self):
         self.configs = {
             AssistantCategory.TRAVEL: TravelConfig(),
-            AssistantCategory.SCHEDULE: CalendarConfig(),
+            AssistantCategory.CALENDAR: CalendarConfig(),
             AssistantCategory.EMAIL: EmailConfig()
         }
 

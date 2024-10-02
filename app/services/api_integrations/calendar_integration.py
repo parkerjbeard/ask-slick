@@ -1,11 +1,14 @@
-from typing import Dict, Any, List
-from app.services.api_integrations import APIIntegration
 from app.services.calendar.calendar_manager import CalendarManager
+from app.services.api_integrations import APIIntegration
+from typing import Dict, Any, List
 from utils.logger import logger
+import asyncio
+import os
 
 class CalendarIntegration(APIIntegration):
     def __init__(self):
         self.calendar_manager = CalendarManager()
+        self.default_timezone = os.getenv('DEFAULT_TIMEZONE', 'UTC')
 
     async def execute(self, function_name: str, params: dict) -> str:
         logger.debug(f"CalendarIntegration executing function: {function_name} with params: {params}")
@@ -28,8 +31,16 @@ class CalendarIntegration(APIIntegration):
             missing_params = [param for param in required_params if param not in params]
             return f"Missing required parameters for checking available slots: {', '.join(missing_params)}"
         
+        # Replace NULL timezone with default timezone
+        if params.get('timezone') == 'NULL':
+            params['timezone'] = self.default_timezone
+            logger.info(f"Using default timezone: {self.default_timezone}")
+        
         try:
-            return self.calendar_manager.check_available_slots(**params)
+            # Run the synchronous method in a thread to avoid blocking
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, lambda: self.calendar_manager.check_available_slots(**params))
+            return result
         except Exception as e:
             logger.error(f"Error in checking available slots: {str(e)}", exc_info=True)
             return f"An error occurred while checking available slots: {str(e)}"
@@ -85,8 +96,10 @@ class CalendarIntegration(APIIntegration):
                             "duration": {"type": "integer", "description": "The duration of the slot in minutes"},
                             "timezone": {"type": "string", "description": "The timezone for the search (optional)"}
                         },
-                        "required": ["start_date", "end_date", "duration"]
-                    }
+                        "required": ["start_date", "end_date", "duration"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             },
             {
@@ -104,8 +117,10 @@ class CalendarIntegration(APIIntegration):
                             "location": {"type": "string", "description": "The location of the event (optional)"},
                             "timezone": {"type": "string", "description": "The timezone for the event (optional)"}
                         },
-                        "required": ["summary", "start_time", "end_time"]
-                    }
+                        "required": ["summary", "start_time", "end_time"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             },
             {
@@ -123,8 +138,10 @@ class CalendarIntegration(APIIntegration):
                             "description": {"type": "string", "description": "The updated description of the event (optional)"},
                             "location": {"type": "string", "description": "The updated location of the event (optional)"}
                         },
-                        "required": ["event_id"]
-                    }
+                        "required": ["event_id"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             },
             {
@@ -137,8 +154,10 @@ class CalendarIntegration(APIIntegration):
                         "properties": {
                             "event_id": {"type": "string", "description": "The ID of the event to delete"}
                         },
-                        "required": ["event_id"]
-                    }
+                        "required": ["event_id"],
+                        "additionalProperties": False,
+                    },
+                    "strict": True
                 }
             }
         ]
@@ -150,16 +169,7 @@ class CalendarIntegration(APIIntegration):
         - Updating existing events in the calendar.
         - Deleting events from the calendar.
 
-        When a user asks for calendar-related actions, always use the appropriate function call:
-        - To check available slots, use the 'check_available_slots' function.
-        - To create a new event, use the 'create_event' function.
-        - To update an existing event, use the 'update_event' function.
-        - To delete an event, use the 'delete_event' function.
-
-        Remember to ask for all necessary information before making a function call. For example:
-        - When checking available slots, ask for the date range and desired duration.
-        - When creating an event, ask for the event title, start time, and end time at minimum.
-        - When updating or deleting an event, ask for the event ID.
+        When a user asks for calendar-related actions, use the provided functions to answer questions.
 
         Always confirm the action with the user before executing it, especially for create, update, and delete operations.
 

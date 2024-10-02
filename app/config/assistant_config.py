@@ -1,26 +1,26 @@
-from enum import Enum
-from typing import Dict, Union
-from app.config.email_config import EmailConfig
-from app.config.travel_config import TravelConfig
+from app.config.classifier_config import ClassifierConfig
 from app.config.calendar_config import CalendarConfig
 from app.config.general_config import GeneralConfig
-from app.config.classifier_config import ClassifierConfig
+from app.config.travel_config import TravelConfig
+from app.config.email_config import EmailConfig
+from typing import Dict, Union
+from enum import Enum
+
 
 class AssistantCategory(Enum):
     TRAVEL = "travel"
-    SCHEDULE = "schedule"
+    CALENDAR = "calendar"
     FAMILY = "family"
     TODO = "todo"
     DOCUMENT = "document"
     EMAIL = "email"
-    SCHEDULE_EMAIL = "scheduleemail"
     GENERAL = "general"
     CLASSIFIER = "classifier"
 
 class AssistantConfig:
     CONFIGS = {
         AssistantCategory.TRAVEL: TravelConfig(),
-        AssistantCategory.SCHEDULE: CalendarConfig(),
+        AssistantCategory.CALENDAR: CalendarConfig(),
         AssistantCategory.EMAIL: EmailConfig(),
         AssistantCategory.GENERAL: GeneralConfig(),
         AssistantCategory.CLASSIFIER: ClassifierConfig(),
