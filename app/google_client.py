@@ -5,6 +5,8 @@ from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from utils.logger import logger
+from google.auth.exceptions import RefreshError
+from googleapiclient.errors import HttpError
 
 class GoogleAuthManager:
     def __init__(self):
@@ -19,7 +21,19 @@ class GoogleAuthManager:
             self.scopes.append(scope)
 
     def authenticate(self):
-        self.credentials = self._get_credentials()
+        try:
+            self.credentials = self._get_credentials()
+            if not self.credentials:
+                raise Exception("Failed to authenticate with Google API")
+        except RefreshError as e:
+            logger.error(f"Error refreshing credentials: {e}")
+            # Delete the token file and try to authenticate again
+            if os.path.exists(self.token_file):
+                os.remove(self.token_file)
+            self.credentials = self._get_credentials()
+        except Exception as e:
+            logger.error(f"Authentication error: {e}")
+            raise
 
     def _get_credentials(self) -> Credentials:
         creds = None
@@ -39,9 +53,15 @@ class GoogleAuthManager:
         return creds
 
     def get_service(self, api_name: str, api_version: str):
+        if not self.credentials:
+            raise Exception("No credentials available. Please authenticate first.")
         service_key = f"{api_name}_{api_version}"
         if service_key not in self.services:
-            self.services[service_key] = build(api_name, api_version, credentials=self.credentials)
+            try:
+                self.services[service_key] = build(api_name, api_version, credentials=self.credentials)
+            except HttpError as error:
+                logger.error(f"Error building {api_name} service: {error}")
+                raise
         return self.services[service_key]
 
 # Create a global instance of GoogleAuthManager
@@ -49,7 +69,7 @@ google_auth_manager = GoogleAuthManager()
 
 def initialize_google_auth():
     # Add all required scopes here
-    google_auth_manager.add_scope('https://www.googleapis.com/auth/calendar.events')
+    google_auth_manager.add_scope('https://www.googleapis.com/auth/calendar')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.compose')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.modify')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.send')
