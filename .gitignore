@@ -21,3 +21,4 @@ logs/
 *.cpython-39
 zprompts/
 __pycache__/
+.DS_Store
