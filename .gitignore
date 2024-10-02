@@ -9,3 +9,14 @@ logs/
 *.log.*
 *.c
 *.so
+*.pyc
+*.pyo
+*.pyd
+*.pyx
+*.pxd
+*.pxi
+*.cpython-312
+*.cpython-311
+*.cpython-310
+*.cpython-39
+zprompts/
