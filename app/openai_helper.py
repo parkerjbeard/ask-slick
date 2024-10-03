@@ -1,13 +1,13 @@
-import os
-from openai import OpenAI
+from app.config.settings import settings
 from typing import List, Dict, Any
 from utils.logger import logger
+from openai import OpenAI
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 class OpenAIClient:
     def __init__(self):
-        self.model = "gpt-4o-mini"
+        self.model = "gpt-4o-2024-08-06"
 
     def _create_chat_completion(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         response = client.chat.completions.create(model=self.model, messages=messages)
@@ -101,3 +101,20 @@ class OpenAIClient:
             {"role": "user", "content": f"Give a very brief, positive acknowledgment for this request, hinting at a seamless transition to a more detailed response: {message}"}
         ]
         return self._create_chat_completion(messages)["message"]
+
+    def identify_event(self, user_message: str, events: List[Dict[str, Any]]) -> str:
+        events_context = "\n".join([f"ID: {event['id']}, Title: {event['summary']}, Start: {event['start']}, End: {event['end']}" for event in events])
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant that identifies which event a user is referring to based on their message and a list of events."},
+            {"role": "user", "content": f"""Given the following list of events and the user's message, identify which event the user is most likely referring to. Respond with only the event ID.
+
+            Events:
+            {events_context}
+
+            User's message: {user_message}
+
+            If you can't determine which event the user is referring to, respond with 'UNCLEAR'.
+            """}
+        ]
+        response = self._create_chat_completion(messages)
+        return response["message"].strip()

@@ -1,14 +1,13 @@
-import os
-from typing import Dict, Any, Optional
-from datetime import datetime
-import requests
-from utils.logger import logger
-import traceback
 from utils.travel_format import process_travel_dates
+from app.config.settings import settings 
+from utils.logger import logger
+from typing import Dict, Any
+import traceback
+import requests
 
 class HotelSearch:
     def __init__(self):
-        self.serpapi_api_key = os.getenv("SERPAPI_API_KEY")
+        self.serpapi_api_key = settings.SERPAPI_API_KEY
         if not self.serpapi_api_key:
             raise ValueError("SerpAPI API key is not set in environment variables")
 

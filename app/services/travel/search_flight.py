@@ -1,14 +1,14 @@
-import os
-from typing import Dict, Any, Optional, Tuple, List
-from datetime import datetime, timedelta
-import requests
-from utils.logger import logger
-import traceback
 from utils.travel_format import normalize_airport_codes, process_travel_dates, set_default_origin
+from app.config.settings import settings
+from utils.logger import logger
+from datetime import datetime
+from typing import Dict, Any
+import traceback
+import requests
 
 class FlightSearch:
     def __init__(self):
-        self.serpapi_api_key = os.getenv("SERPAPI_API_KEY")
+        self.serpapi_api_key = settings.SERPAPI_API_KEY
         if not self.serpapi_api_key:
             raise ValueError("SerpAPI API key is not set in environment variables")
 
@@ -24,7 +24,7 @@ class FlightSearch:
             "stops": "0",
             "show_hidden": "false"
         }
-        self.default_origin = os.getenv("DEFAULT_ORIGIN", "")
+        self.default_origin = settings.DEFAULT_ORIGIN
 
     def search_flights(self, travel_request: Dict[str, Any]) -> str:
         logger.debug(f"Searching flights with travel request: {travel_request}")

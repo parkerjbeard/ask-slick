@@ -1,19 +1,18 @@
-import os
-import json
-from slack_bolt.async_app import AsyncApp
 from app.assistants.assistant_manager import AssistantManager
-from app.assistants.dispatcher import Dispatcher
-from utils.logger import logger
 from utils.slack_formatter import SlackMessageFormatter
-import traceback
-from app.openai_helper import OpenAIClient
 from app.config.config_manager import ConfigManager
+from app.assistants.dispatcher import Dispatcher
+from app.openai_helper import OpenAIClient
+from slack_bolt.async_app import AsyncApp
+from app.config.settings import settings
+from utils.logger import logger
+import traceback
 
 def create_slack_bot(config_manager: ConfigManager):
     logger.debug("Creating Slack bot")
     app = AsyncApp(
-        token=os.environ.get("SLACK_BOT_TOKEN"),
-        signing_secret=os.environ.get("SLACK_SIGNING_SECRET")
+        token=settings.SLACK_BOT_TOKEN,
+        signing_secret=settings.SLACK_SIGNING_SECRET
     )
 
     assistant_manager = AssistantManager(config_manager)

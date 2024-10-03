@@ -43,8 +43,8 @@ class GmailIntegration(APIIntegration):
                             "body": {"type": "string", "description": "Email body content"},
                             "attachments": {"type": "array", "items": {"type": "string"}, "description": "List of file paths to attach"}
                         },
-                        "required": ["to", "subject", "body"],
-                        "additionalProperties": False,
+                        "required": ["to", "subject", "body", "attachments"],
+                        "additionalProperties": False
                     },
                     "strict": True
                 }
@@ -62,8 +62,8 @@ class GmailIntegration(APIIntegration):
                             "body": {"type": "string", "description": "Email body content"},
                             "attachments": {"type": "array", "items": {"type": "string"}, "description": "List of file paths to attach"}
                         },
-                        "required": ["to", "subject", "body"],
-                        "additionalProperties": False,
+                        "required": ["to", "subject", "body", "attachments"],
+                        "additionalProperties": False
                     },
                     "strict": True
                 }

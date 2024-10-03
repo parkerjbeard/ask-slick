@@ -73,10 +73,9 @@ class TravelIntegration(APIIntegration):
                             "infants_in_seat": {"type": "string", "description": "Number of infants in seat"},
                             "infants_on_lap": {"type": "string", "description": "Number of infants on lap"},
                             "stops": {"type": "string", "description": "Number of stops (e.g., '0' for non-stop, '1' for one stop)"},
-                            "max_price": {"type": "string", "description": "Maximum price for flights"}
                         },
-                        "required": ["origin", "destination", "departure_date"],
-                        "additionalProperties": False,
+                        "required": ["origin", "destination", "departure_date", "return_date", "currency", "travel_class", "adults", "children", "infants_in_seat", "infants_on_lap", "stops"],
+                        "additionalProperties": False
                     },
                     "strict": True
                 }
@@ -96,13 +95,9 @@ class TravelIntegration(APIIntegration):
                             "adults": {"type": "string", "description": "Number of adult guests"},
                             "children": {"type": "string", "description": "Number of child guests"},
                             "rating": {"type": "string", "description": "Minimum hotel rating (e.g., '8' for 4-star and above)"},
-                            "min_price": {"type": "string", "description": "Minimum price for hotels"},
-                            "max_price": {"type": "string", "description": "Maximum price for hotels"},
-                            "amenities": {"type": "string", "description": "Comma-separated list of desired amenities"},
-                            "property_types": {"type": "string", "description": "Comma-separated list of desired property types"}
                         },
-                        "required": ["destination", "check_in", "check_out"],
-                        "additionalProperties": False,
+                        "required": ["destination", "check_in", "check_out", "currency", "adults", "children", "rating"],
+                        "additionalProperties": False
                     },
                     "strict": True
                 }

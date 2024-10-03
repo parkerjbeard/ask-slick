@@ -1,14 +1,14 @@
 from app.assistants.assistant_factory import AssistantFactory
 from app.config.config_manager import ConfigManager
 from typing import Optional, List, Dict, Any
+from app.config.settings import settings
 from utils.logger import logger
 from openai import OpenAI
 import time
-import os
 
 class AssistantManager:
     def __init__(self, config_manager: ConfigManager):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(api_key=settings.OPENAI_API_KEY)
         self._assistant_cache = {}
         self.config_manager = config_manager
 

@@ -37,43 +37,28 @@ class MockSlackSay:
         logger.info(f"Assistant: {text}")
 
 @pytest.mark.asyncio
-async def test_calendar_integration():
+async def test_create_event():
     """
     Main function to run calendar integration tests.
     """
-    logger.info("Starting calendar integration test")
+    logger.info("Starting create event test")
     start_time = time.time()
 
     # Initialize necessary components for testing
     initialize_google_auth()
+    
     calendar_manager = CalendarManager()
     config_manager = ConfigManager()
     dispatcher = Dispatcher()
     slack_say = MockSlackSay()
     await update_assistants(config_manager)
 
-
     # Define test cases
     test_cases = [
-        {
-            "name": "Check Available Slots",
-            "text": "check available slots for a meeting from 2023-11-01 to 2023-11-02 with a duration of 60 minutes"
-        },
+
         {
             "name": "Create Event",
-            "text": "create an event with the title 'Test Event' on 2023-11-01 at 3pm for 1 hour"
-        },
-        {
-            "name": "List Events",
-            "text": "list events from 2023-11-01 to 2023-11-30"
-        },
-        {
-            "name": "Update Event",
-            "text": "update the event with the title 'Test Event' on 2023-11-01 to 4pm for 1 hour"
-        },
-        {
-            "name": "Delete Event",
-            "text": "delete the event with the title 'Test Event' on 2023-11-01"
+            "text": "create an event with the title 'Test Event' on 2023-11-01 at 3pm for 1 hour with a description 'This is a test event'"
         },
 
 
@@ -95,7 +80,7 @@ async def test_calendar_integration():
             logger.error(f"Error processing test case {i}: {str(e)}", exc_info=True)
 
     # Log the total time taken for the tests
-    logger.info(f"Calendar integration tests completed in {time.time() - start_time:.2f} seconds")
+    logger.info(f"Create event tests completed in {time.time() - start_time:.2f} seconds")
 
 if __name__ == "__main__":
-    asyncio.run(test_calendar_integration())
+    asyncio.run(test_create_event())

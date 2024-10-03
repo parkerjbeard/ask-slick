@@ -2,18 +2,18 @@ from app.google_client import get_google_service
 from googleapiclient.errors import HttpError
 from typing import Dict, Any, List, Tuple
 from datetime import datetime, timedelta
+from app.config.settings import settings
 from utils.logger import logger
 from dotenv import load_dotenv
 from datetime import time
 load_dotenv()
 import pytz
-import os
 
 class CalendarManager:
     def __init__(self):
         logger.debug("Initializing CalendarManager")
         self.service = get_google_service('calendar', 'v3')
-        self.default_timezone = os.getenv('DEFAULT_TIMEZONE', 'UTC')
+        self.default_timezone = settings.DEFAULT_TIMEZONE
 
     def check_available_slots(self, start_date: str, end_date: str, duration: int, timezone: str = None) -> str:
         logger.debug(f"Checking available slots: start_date={start_date}, end_date={end_date}, duration={duration}, timezone={timezone}")
@@ -115,6 +115,9 @@ class CalendarManager:
                 'dateTime': end_time,
                 'timeZone': timezone,
             },
+            'reminders': {
+                'useDefault': True,
+            },
         }
 
         try:
@@ -152,6 +155,40 @@ class CalendarManager:
         except HttpError as error:
             logger.error(f'An error occurred: {error}')
             return f"An error occurred while deleting the event: {error}"
+
+    def list_events(self, start_date: str, end_date: str, timezone: str = None) -> List[Dict[str, Any]]:
+        logger.debug(f"Listing events: start_date={start_date}, end_date={end_date}, timezone={timezone}")
+        timezone = timezone or self.default_timezone
+        tz = pytz.timezone(timezone)
+        
+        try:
+            start_datetime = tz.localize(datetime.strptime(start_date, '%Y-%m-%d'))
+            end_datetime = tz.localize(datetime.strptime(end_date, '%Y-%m-%d')) + timedelta(days=1)
+
+            events_result = self.service.events().list(
+                calendarId='primary',
+                timeMin=start_datetime.isoformat(),
+                timeMax=end_datetime.isoformat(),
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            events = events_result.get('items', [])
+
+            return [
+                {
+                    'id': event['id'],
+                    'summary': event['summary'],
+                    'start': event['start'].get('dateTime', event['start'].get('date')),
+                    'end': event['end'].get('dateTime', event['end'].get('date')),
+                    'description': event.get('description', ''),
+                    'location': event.get('location', '')
+                }
+                for event in events
+            ]
+
+        except Exception as e:
+            logger.error(f'Unexpected error in list_events: {e}')
+            raise
 
 def create_calendar_manager() -> CalendarManager:
     logger.debug("Creating CalendarManager instance")
