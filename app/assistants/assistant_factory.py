@@ -11,13 +11,13 @@ class AssistantFactory:
         return AssistantConfig.get_assistant_name(category)
     
     @staticmethod
-    def get_api_integration(name: str) -> Any:
+    def get_api_integration(name: str, user_id: str) -> Any:
         if name == "TravelAssistant":
             return TravelIntegration()
         elif name == "CalendarAssistant":
-            return CalendarIntegration()
+            return CalendarIntegration(user_id)
         elif name == "GmailAssistant":
-            return GmailIntegration()
+            return GmailIntegration(user_id)
         # Add other API integrations as they are created
         return None
 
@@ -26,7 +26,6 @@ class AssistantFactory:
         integration = AssistantFactory.get_api_integration(name)
         if integration:
             tools = integration.get_tools()
-            logger.debug(f"Tools for {name}: {tools}")
             return tools, "gpt-4o-2024-08-06"
         return [], "gpt-4o-2024-08-06"
 

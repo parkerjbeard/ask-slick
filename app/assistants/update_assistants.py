@@ -15,10 +15,7 @@ async def update_assistants(config_manager):
     for assistant_name in config_manager.get_assistant_names().values():
         assistant_id = assistants.get(assistant_name)
         tools, model = assistant_factory.get_tools_for_assistant(assistant_name)
-        logger.debug(f"Tools for {assistant_name}: {tools}")
         instructions = assistant_factory.get_assistant_instructions(assistant_name)
-        logger.debug(f"Instructions for {assistant_name}: {instructions}")
-        logger.debug(f"Model for {assistant_name}: {model}")
         if assistant_id:
             await assistant_manager.update_assistant(
                 assistant_id=assistant_id,

@@ -10,13 +10,15 @@ load_dotenv()
 import pytz
 
 class CalendarManager:
-    def __init__(self):
-        logger.debug("Initializing CalendarManager")
-        self.service = get_google_service('calendar', 'v3')
+    def __init__(self, user_id: str):
+        logger.debug(f"Initializing CalendarManager for user_id: {user_id}")
+        self.user_id = user_id  # Store user_id for logging purposes
+        self.service = get_google_service(user_id, 'calendar', 'v3')
         self.default_timezone = settings.DEFAULT_TIMEZONE
+        logger.debug(f"CalendarManager initialized with default timezone: {self.default_timezone}")
 
     def check_available_slots(self, start_date: str, end_date: str, duration: int, timezone: str = None) -> str:
-        logger.debug(f"Checking available slots: start_date={start_date}, end_date={end_date}, duration={duration}, timezone={timezone}")
+        logger.debug(f"[User: {self.user_id}] Checking available slots: start_date={start_date}, end_date={end_date}, duration={duration}, timezone={timezone}")
         timezone = timezone or self.default_timezone
         tz = pytz.timezone(timezone)
         
@@ -30,14 +32,16 @@ class CalendarManager:
                 "timeZone": timezone,
                 "items": [{"id": 'primary'}]
             }
+            logger.debug(f"[User: {self.user_id}] Executing freebusy query: {freebusy_query}")
             freebusy = self.service.freebusy().query(body=freebusy_query).execute()
             busy_times = freebusy.get('calendars', {}).get('primary', {}).get('busy', [])
+            logger.debug(f"[User: {self.user_id}] Found {len(busy_times)} busy time slots")
 
             available_blocks = self._find_available_blocks(start_datetime, end_datetime, busy_times, (9, 17), timedelta(minutes=duration), 5, tz)
             return self._format_availability(available_blocks, timezone)
 
         except Exception as e:
-            logger.error(f'Unexpected error in check_available_slots: {e}')
+            logger.error(f'[User: {self.user_id}] Unexpected error in check_available_slots: {e}')
             return f"An unexpected error occurred: {e}"
 
     def _find_available_blocks(self, start: datetime, end: datetime, busy_times: List[Dict[str, Any]], working_hours: Tuple[int, int], duration: timedelta, interval: int, tz: pytz.tzinfo) -> List[Tuple[datetime, List[Tuple[datetime, datetime]]]]:
@@ -190,6 +194,6 @@ class CalendarManager:
             logger.error(f'Unexpected error in list_events: {e}')
             raise
 
-def create_calendar_manager() -> CalendarManager:
+def create_calendar_manager(user_id: str) -> CalendarManager:
     logger.debug("Creating CalendarManager instance")
-    return CalendarManager()
+    return CalendarManager(user_id)

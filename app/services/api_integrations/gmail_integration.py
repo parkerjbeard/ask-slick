@@ -4,11 +4,20 @@ from typing import Dict, Any, List
 from utils.logger import logger
 
 class GmailIntegration(APIIntegration):
-    def __init__(self):
-        self.gmail_manager = GmailManager()
+    def __init__(self, user_id: str):
+        logger.debug(f"Initializing GmailIntegration with user_id: {user_id}")
+        if not user_id:
+            logger.error("Attempted to initialize GmailIntegration with empty user_id")
+            raise ValueError("user_id is required for GmailIntegration")
+        self.user_id = user_id
+        logger.info(f"Creating GmailManager for user_id: {user_id}")
+        self.gmail_manager = GmailManager(user_id)
 
     async def execute(self, function_name: str, params: dict) -> str:
-        logger.debug(f"GmailIntegration executing function: {function_name} with params: {params}")
+        logger.debug(f"GmailIntegration executing function for user {self.user_id}: {function_name}")
+        
+        # Remove user_id from params before passing to gmail_manager
+        params = {k: v for k, v in params.items() if k != 'user_id'}
         
         if function_name == "send_email":
             return await self._send_email(params)

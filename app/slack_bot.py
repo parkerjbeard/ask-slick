@@ -7,12 +7,15 @@ from slack_bolt.async_app import AsyncApp
 from app.config.settings import settings
 from utils.logger import logger
 import traceback
+from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 
 def create_slack_bot(config_manager: ConfigManager):
     logger.debug("Creating Slack bot")
     app = AsyncApp(
         token=settings.SLACK_BOT_TOKEN,
-        signing_secret=settings.SLACK_SIGNING_SECRET
+        signing_secret=settings.SLACK_SIGNING_SECRET,
+        process_before_response=True,
+        installation_store=None  # Add this for Lambda
     )
 
     assistant_manager = AssistantManager(config_manager)
@@ -48,7 +51,7 @@ async def process_message_event(event, say, dispatcher):
         await say(text=short_response, channel=channel)
 
         logger.debug("Dispatching message")
-        dispatch_result = await dispatcher.dispatch(text.lower())
+        dispatch_result = await dispatcher.dispatch(text.lower(), user)  # Added user parameter here
         logger.debug(f"Dispatch result: {dispatch_result}")
         
         if 'error' in dispatch_result:

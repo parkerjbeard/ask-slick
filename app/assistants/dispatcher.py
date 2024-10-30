@@ -14,11 +14,21 @@ class Dispatcher:
         self.assistant_manager = AssistantManager(self.config_manager)
         self.classifier = Classifier(self.assistant_manager, self.config_manager)
         self.current_category = None
-        self.thread_id = None 
+        self.thread_id = None
+        self.user_id = None
         
-    async def dispatch(self, user_input: str) -> dict:
+    def set_user_context(self, user_id: str):
+        """Set the user context for the dispatcher"""
+        self.user_id = user_id
+
+    async def dispatch(self, user_input: str, user_id: str = None) -> dict:
         try:
-            logger.info(f"Starting dispatch for user input: {user_input}")
+            logger.info(f"Starting dispatch for user input: {user_input} with user_id: {user_id}")
+            if user_id:
+                self.user_id = user_id
+                logger.debug(f"Updated dispatcher user_id to: {self.user_id}")
+            else:
+                logger.debug(f"Keeping existing dispatcher user_id: {self.user_id}")
             
             self.current_category = await self.classifier.classify_message(user_input)
             
@@ -100,13 +110,20 @@ class Dispatcher:
         return AssistantCategory.GENERAL
 
     async def call_function(self, function_name: str, function_params: dict) -> str:
-        logger.debug(f"Executing function: {function_name} with parameters: {function_params}")
+        if self.user_id:
+            function_params['user_id'] = self.user_id
+        else:
+            logger.warning("No user_id available in dispatcher")
         
-        integration = AssistantFactory.get_api_integration(AssistantConfig.get_assistant_name(self.current_category))
+        integration = AssistantFactory.get_api_integration(
+            AssistantConfig.get_assistant_name(self.current_category),
+            self.user_id
+        )
         
         if integration:
             return await integration.execute(function_name, function_params)
         else:
+            logger.error(f"No integration found for assistant: {AssistantConfig.get_assistant_name(self.current_category)}")
             return f"Unknown function: {function_name}"
     async def get_chat_history(self) -> List[str]:
         if not self.thread_id:

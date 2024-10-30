@@ -11,8 +11,11 @@ import mimetypes
 import os
 
 class GmailManager:
-    def __init__(self):
-        self.service = get_google_service('gmail', 'v1')
+    def __init__(self, user_id: str):
+        logger.debug(f"Initializing GmailManager for user_id: {user_id}")
+        self.user_id = user_id
+        self.service = get_google_service(user_id, 'gmail', 'v1')
+        logger.debug(f"GmailManager initialized for user: {user_id}")
 
     def _create_message(self, to: str, subject: str, body: str, attachments: Optional[List[str]] = None) -> Dict[str, Any]:
         message = MIMEMultipart()
@@ -42,16 +45,18 @@ class GmailManager:
         try:
             message = self._create_message(to, subject, body, attachments)
             draft = self.service.users().drafts().create(userId='me', body={'message': message}).execute()
+            logger.debug(f"[User: {self.user_id}] Draft created successfully")
             return f"Draft created successfully. Draft ID: {draft['id']}"
         except HttpError as error:
-            logger.error(f'An error occurred while creating draft: {error}')
+            logger.error(f'[User: {self.user_id}] An error occurred while creating draft: {error}')
             return f"An error occurred while creating draft: {error}"
 
     async def send_email(self, to: str, subject: str, body: str, attachments: Optional[List[str]] = None) -> str:
         try:
             message = self._create_message(to, subject, body, attachments)
             sent_message = self.service.users().messages().send(userId='me', body=message).execute()
+            logger.debug(f"[User: {self.user_id}] Email sent successfully")
             return f"Email sent successfully. Message ID: {sent_message['id']}"
         except HttpError as error:
-            logger.error(f'An error occurred while sending email: {error}')
+            logger.error(f'[User: {self.user_id}] An error occurred while sending email: {error}')
             return f"An error occurred while sending email: {error}"

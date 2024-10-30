@@ -16,8 +16,18 @@ class CalendarConfig(BaseConfig):
     CATEGORY_DESCRIPTION = "Messages about appointments, meetings, or time-specific events that don't involve sending emails."
     FUNCTIONS = ["check_available_slots", "create_event", "update_event", "delete_event"]
 
+    FUNCTION_PARAMS = {
+        "check_available_slots": ["start_date", "end_date", "duration", "timezone"],
+        "create_event": ["summary", "start_time", "end_time", "description", "location", "timezone"],
+        "update_event": ["event_id", "summary", "start_time", "end_time"],
+        "delete_event": ["event_id"],
+    }
+
     def get_messages(self, history_context: str, user_input: str, function_name: str) -> list:
+        required_params = self.FUNCTION_PARAMS.get(function_name, [])
+        param_instructions = f"\nRequired parameters for {function_name}: {', '.join(required_params)}"
+        
         return [
-            {"role": "system", "content": self.SYSTEM_MESSAGE},
+            {"role": "system", "content": self.SYSTEM_MESSAGE + param_instructions},
             {"role": "user", "content": f"Chat history:\n{history_context}\n\nParse the following calendar request for {function_name}, using the chat history as context:\n\n{user_input}"}
         ]

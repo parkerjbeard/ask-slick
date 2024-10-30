@@ -7,13 +7,19 @@ from utils.logger import logger
 import asyncio
 
 class CalendarIntegration(APIIntegration):
-    def __init__(self):
-        self.calendar_manager = CalendarManager()
+    def __init__(self, user_id: str):
+        logger.debug(f"Initializing CalendarIntegration with user_id: {user_id}")
+        if not user_id:
+            logger.error("Attempted to initialize CalendarIntegration with empty user_id")
+            raise ValueError("user_id is required for CalendarIntegration")
+        self.user_id = user_id
+        logger.info(f"Creating CalendarManager for user_id: {user_id}")
+        self.calendar_manager = CalendarManager(user_id)
         self.default_timezone = settings.DEFAULT_TIMEZONE
         self.openai_client = OpenAIClient()
 
     async def execute(self, function_name: str, params: dict) -> str:
-        logger.debug(f"CalendarIntegration executing function: {function_name} with params: {params}")
+        logger.debug(f"CalendarIntegration executing function for user {self.user_id}: {function_name} with params: {params}")
         
         if function_name == "check_available_slots":
             return await self._check_available_slots(params)
@@ -43,9 +49,13 @@ class CalendarIntegration(APIIntegration):
             logger.info(f"Using default timezone: {self.default_timezone}")
         
         try:
+            # Remove user_id from params before passing to calendar_manager
+            calendar_params = {k: v for k, v in params.items() if k != 'user_id'}
+            logger.debug(f"Filtered parameters for calendar manager: {calendar_params}")
+            
             # Run the synchronous method in a thread to avoid blocking
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, lambda: self.calendar_manager.check_available_slots(**params))
+            result = await loop.run_in_executor(None, lambda: self.calendar_manager.check_available_slots(**calendar_params))
             return result
         except Exception as e:
             logger.error(f"Error in checking available slots: {str(e)}", exc_info=True)
