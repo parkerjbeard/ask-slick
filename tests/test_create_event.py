@@ -58,7 +58,7 @@ async def test_create_event():
 
         {
             "name": "Create Event",
-            "text": "create an event with the title 'Test Event' on 2023-11-01 at 3pm for 1 hour with a description 'This is a test event'"
+            "text": "create an event with the title 'Test Event' on 2024-11-01 at 3pm for 1 hour with a description 'This is a test event'"
         },
 
 
