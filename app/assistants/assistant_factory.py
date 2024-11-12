@@ -11,25 +11,33 @@ class AssistantFactory:
         return AssistantConfig.get_assistant_name(category)
     
     @staticmethod
-    def get_api_integration(name: str, user_id: str) -> Any:
+    def get_api_integration(name: str, user_id: str = None) -> Any:
+        # Allow general assistant without user_id
+        if name == "GeneralAssistant":
+            return None
+        
+        # Require user_id for specialized assistants
+        if not user_id:
+            logger.warning("User ID required for specialized assistants")
+            return None
+        
         if name == "TravelAssistant":
             return TravelIntegration()
         elif name == "CalendarAssistant":
             return CalendarIntegration(user_id)
         elif name == "GmailAssistant":
             return GmailIntegration(user_id)
-        # Add other API integrations as they are created
         return None
 
     @staticmethod
-    def get_tools_for_assistant(name: str) -> Tuple[List[Dict[str, Any]], str]:
-        integration = AssistantFactory.get_api_integration(name)
+    def get_tools_for_assistant(name: str, user_id: str) -> Tuple[List[Dict[str, Any]], str]:
+        integration = AssistantFactory.get_api_integration(name, user_id)
         if integration:
             tools = integration.get_tools()
             return tools, "gpt-4o-2024-08-06"
         return [], "gpt-4o-2024-08-06"
 
     @staticmethod
-    def get_assistant_instructions(name: str) -> str:
-        integration = AssistantFactory.get_api_integration(name)
+    def get_assistant_instructions(name: str, user_id: str) -> str:
+        integration = AssistantFactory.get_api_integration(name, user_id)
         return integration.get_instructions() if integration else f"You are a {name}."

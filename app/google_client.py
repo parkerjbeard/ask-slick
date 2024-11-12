@@ -5,6 +5,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import Flow
 from app.config.settings import settings
 from typing import List, Dict, Optional
+from utils.user_id import UserIDManager
 from utils.logger import logger
 from dotenv import load_dotenv
 from datetime import datetime
@@ -47,6 +48,7 @@ class GoogleAuthManager:
     def save_credentials(self, user_id: str, credentials: Credentials) -> bool:
         """Save user credentials to DynamoDB with encryption"""
         try:
+            normalized_user_id = UserIDManager.normalize_user_id(user_id)
             manifest = {
                 'token': credentials.token,
                 'refresh_token': credentials.refresh_token,
@@ -62,12 +64,12 @@ class GoogleAuthManager:
             )['CiphertextBlob']
             
             item = {
-                'user_id': user_id,
+                'user_id': normalized_user_id,
                 'manifest_data': encrypted_data,
                 'updated_at': datetime.utcnow().isoformat()
             }
             self.table.put_item(Item=item)
-            logger.info(f"Saved encrypted credentials for user {user_id}")
+            logger.info(f"Saved encrypted credentials for user {normalized_user_id}")
             return True
         except Exception as e:
             logger.error(f"Error saving credentials: {e}")
@@ -76,8 +78,10 @@ class GoogleAuthManager:
     def get_credentials(self, user_id: str) -> Optional[Credentials]:
         """Get user credentials from DynamoDB with decryption"""
         try:
-            response = self.table.get_item(Key={'user_id': user_id})
+            normalized_user_id = UserIDManager.normalize_user_id(user_id)
+            response = self.table.get_item(Key={'user_id': normalized_user_id})
             if 'Item' not in response:
+                logger.info(f"No credentials found for user {normalized_user_id}")
                 return None
 
             decrypted_data = self.kms_client.decrypt(
@@ -102,7 +106,7 @@ class GoogleAuthManager:
             if not credentials.valid:
                 if credentials.expired and credentials.refresh_token:
                     credentials.refresh(Request())
-                    self.save_credentials(user_id, credentials)
+                    self.save_credentials(normalized_user_id, credentials)
                 else:
                     return None
 
@@ -132,6 +136,16 @@ class GoogleAuthManager:
 
         return self.services[user_id][service_key]
 
+    def get_auth_url(self) -> str:
+        """Get the authorization URL for Google OAuth"""
+        flow = self.create_auth_flow()
+        auth_url, _ = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent'
+        )
+        return auth_url
+
 # Create a global instance
 google_auth_manager = GoogleAuthManager()
 
@@ -141,6 +155,8 @@ def initialize_google_auth():
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.compose')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.modify')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.send')
+    google_auth_manager.add_scope('https://www.googleapis.com/auth/userinfo.email')
+    google_auth_manager.add_scope('https://www.googleapis.com/auth/userinfo.profile')
     logger.info("Google authentication scopes initialized")
 
 def get_google_service(user_id: str, api_name: str, api_version: str = None):
