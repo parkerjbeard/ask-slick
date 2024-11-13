@@ -30,8 +30,18 @@ async def setup():
 def lambda_handler(event, context):
     try:
         logger.info("Lambda handler started")
-        logger.debug(f"Event type: {type(event)}, Context: {context}")
-        
+        logger.debug(f"Event: {event}")
+
+        # Check if this is a retry attempt
+        headers = event.get('headers', {})
+        if 'x-slack-retry-num' in headers:
+            logger.info("Skipping retry attempt")
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': 'Retry request ignored'}),
+                'headers': {'Content-Type': 'application/json'}
+            }
+
         body = event.get('body')
         if body:
             if isinstance(body, str):
