@@ -1,10 +1,10 @@
-from app.google_client import GoogleAuthManager, initialize_google_auth
+from app.google_client import google_auth_manager, initialize_google_auth
 from app.openai_helper import OpenAIClient
 from utils.logger import logger
 from typing import Dict, Any
 import pytz
 import boto3
-from datetime import datetime
+from datetime import datetime, UTC
 import asyncio
 import traceback
 
@@ -12,9 +12,7 @@ class UserSetup:
     def __init__(self):
         self.dynamodb = boto3.resource('dynamodb')
         self.user_preferences_table = self.dynamodb.Table('user_preferences')
-        self.google_auth_manager = GoogleAuthManager()
-        # Initialize Google auth scopes
-        initialize_google_auth()
+        self.google_auth_manager = google_auth_manager
         self.openai_client = OpenAIClient()
 
     async def start_setup(self, user_id: str, say: Any) -> Dict[str, Any]:
@@ -23,27 +21,27 @@ class UserSetup:
         """
         logger.info(f"Starting user setup for {user_id}")
         
+        # Initialize Google auth scopes before starting setup
+        initialize_google_auth()
+        
         # Check if user already exists
         if self._check_existing_user(user_id):
             logger.info(f"User {user_id} already exists")
             return {"status": "existing_user"}
 
-        # Send welcome message
-        await say(
-            text="👋 Welcome! I'm your AI assistant. Let's get you set up!",
-            blocks=[
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "👋 Welcome! I'm your AI assistant. Let's get you set up!"
-                    }
-                }
-            ]
-        )
+        # Create flow and store it for later use
+        self.flow = self.google_auth_manager.create_auth_flow()
+        
+        # Add logging before generating auth URL
+        logger.info(f"Flow redirect URI: {self.flow.redirect_uri}")
+        logger.info(f"Flow scopes: {self.flow.oauth2session.scope}")
+        
+        auth_url, _ = self.flow.authorization_url(access_type='offline', include_granted_scopes='true')
+        
+        # Log the generated URL
+        logger.info(f"Generated auth URL: {auth_url}")
 
         # Start Google authentication
-        auth_url = self.google_auth_manager.get_auth_url()
         await say(
             text="First, I'll need access to your Google account to help with calendar and email tasks.",
             blocks=[
@@ -51,7 +49,7 @@ class UserSetup:
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "First, I'll need access to your Google account to help with calendar and email tasks."
+                        "text": "Hello! First, I'll need access to your Google account to help with calendar and email tasks."
                     }
                 },
                 {
@@ -81,10 +79,14 @@ class UserSetup:
         Handles Google authentication completion
         """
         try:
-            # Create flow and exchange code for credentials
-            flow = self.google_auth_manager.create_auth_flow()
-            flow.fetch_token(code=auth_code)
-            credentials = flow.credentials
+            # Use the same flow instance from start_setup
+            if not hasattr(self, 'flow'):
+                # If flow doesn't exist (e.g., after a restart), create a new one
+                self.flow = self.google_auth_manager.create_auth_flow()
+                
+            # Fetch token using the same flow instance
+            self.flow.fetch_token(code=auth_code)
+            credentials = self.flow.credentials
 
             # Save credentials
             if not self.google_auth_manager.save_credentials(user_id, credentials):
@@ -130,7 +132,7 @@ class UserSetup:
             self._save_user_preferences(user_id, {
                 "timezone": timezone_str,
                 "setup_completed": True,
-                "setup_date": datetime.utcnow().isoformat()
+                "setup_date": datetime.now(UTC).isoformat()
             })
 
             await say(blocks=[
@@ -161,8 +163,9 @@ class UserSetup:
             logger.info(f"Checking existing user in DynamoDB - user_id: {user_id}")
             logger.debug(f"DynamoDB table name: {self.user_preferences_table.name}")
             
-            response = self.user_preferences_table.get_item(Key={'user_id': user_id})
-            logger.debug(f"DynamoDB response: {response}")
+            # Use slack_user_id as the key
+            response = self.user_preferences_table.get_item(Key={'slack_user_id': user_id})
+            #logger.debug(f"DynamoDB response: {response}")
             
             if 'Item' in response:
                 setup_completed = response['Item'].get('setup_completed', False)
@@ -181,16 +184,17 @@ class UserSetup:
         Saves user preferences to DynamoDB
         """
         try:
-            self.user_preferences_table.put_item(
-                Item={
-                    'user_id': user_id,
-                    **preferences,
-                    'updated_at': datetime.utcnow().isoformat()
-                }
-            )
+            # Ensure slack_user_id is set correctly
+            item = {
+                'slack_user_id': user_id,  # Primary key must be slack_user_id
+                **preferences,
+                'updated_at': datetime.now(UTC).isoformat()
+            }
+            logger.debug(f"Saving item to DynamoDB: {item}")
+            self.user_preferences_table.put_item(Item=item)
         except Exception as e:
             logger.error(f"Error saving user preferences: {str(e)}")
-            raise 
+            raise
 
     async def check_user_setup(self, user_id: str) -> Dict[str, Any]:
         """
@@ -207,9 +211,34 @@ class UserSetup:
         Waits for user setup to complete with a timeout
         Returns True if setup is completed, False if timeout occurs
         """
-        start_time = datetime.utcnow()
-        while (datetime.utcnow() - start_time).total_seconds() < timeout:
+        start_time = datetime.now(UTC)
+        while (datetime.now(UTC) - start_time).total_seconds() < timeout:
             if self._check_existing_user(user_id):
                 return True
             await asyncio.sleep(1)  # Wait 1 second before checking again
         return False
+
+    def register_new_user(self, user_id: str) -> bool:
+        """
+        Registers a new user in DynamoDB with initial preferences
+        """
+        try:
+            logger.info(f"Registering new user in DynamoDB - user_id: {user_id}")
+            
+            # Initial user preferences with correct key name
+            initial_preferences = {
+                'slack_user_id': user_id,  # Changed from 'user_id' to 'slack_user_id'
+                'setup_completed': False,
+                'registration_date': datetime.now(UTC).isoformat(),
+                'updated_at': datetime.now(UTC).isoformat()
+            }
+            
+            logger.debug(f"Initial preferences: {initial_preferences}")
+            self._save_user_preferences(user_id, initial_preferences)
+            logger.info(f"Successfully registered new user: {user_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error registering new user: {str(e)}")
+            logger.error(f"Full exception details: {traceback.format_exc()}")
+            return False

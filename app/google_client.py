@@ -6,9 +6,9 @@ from google_auth_oauthlib.flow import Flow
 from app.config.settings import settings
 from typing import List, Dict, Optional
 from utils.user_id import UserIDManager
+from datetime import datetime, UTC
 from utils.logger import logger
 from dotenv import load_dotenv
-from datetime import datetime
 import boto3
 import json
 import os
@@ -66,7 +66,7 @@ class GoogleAuthManager:
             item = {
                 'user_id': normalized_user_id,
                 'manifest_data': encrypted_data,
-                'updated_at': datetime.utcnow().isoformat()
+                'updated_at': datetime.now(UTC).isoformat()
             }
             self.table.put_item(Item=item)
             logger.info(f"Saved encrypted credentials for user {normalized_user_id}")
@@ -151,13 +151,15 @@ google_auth_manager = GoogleAuthManager()
 
 def initialize_google_auth():
     """Initialize scopes for Google authentication"""
+    # Clear existing scopes first to prevent duplicates
+    google_auth_manager.scopes = []
+    
     google_auth_manager.add_scope('https://www.googleapis.com/auth/calendar')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.compose')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.modify')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/gmail.send')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/userinfo.email')
     google_auth_manager.add_scope('https://www.googleapis.com/auth/userinfo.profile')
-    logger.info("Google authentication scopes initialized")
 
 def get_google_service(user_id: str, api_name: str, api_version: str = None):
     """Helper function to get a Google service for a specific user"""

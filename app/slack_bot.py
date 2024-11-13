@@ -125,6 +125,11 @@ def create_slack_bot(config_manager: ConfigManager):
     return _slack_app
 
 async def process_message_event(event, say, dispatcher, normalized_user_id):
+    # Add check for bot messages
+    if 'bot_id' in event:
+        logger.debug("Ignoring bot message")
+        return
+        
     logger.info(f"Processing message event for user {normalized_user_id}")
     logger.info(f"Full event data: {event}")
     
@@ -133,23 +138,21 @@ async def process_message_event(event, say, dispatcher, normalized_user_id):
     
     logger.info(f"Message text: '{text}' in channel: {channel}")
 
-    if not text:
-        logger.warning("Invalid message event: missing text")
-        return
-
     try:
         # Check user setup status first
         user_setup = UserSetup()
-        setup_status = user_setup._check_existing_user(normalized_user_id)
         
-        # Use general assistant if user isn't set up
+        # First check if user exists, if not register them
+        setup_status = user_setup._check_existing_user(normalized_user_id)
         if not setup_status:
-            logger.info(f"User {normalized_user_id} not set up, using general assistant")
-            openai_client = OpenAIClient()
-            response = openai_client.generate_short_response(text)
-            await say(text=response, channel=channel)
+            logger.info(f"New user detected: {normalized_user_id}")
+            registration_success = user_setup.register_new_user(normalized_user_id)
+            if not registration_success:
+                logger.error(f"Failed to register new user: {normalized_user_id}")
+                await say(text="I'm sorry, but I encountered an error while setting up your account. Please try again later.", channel=channel)
+                return
             
-            # Start setup process if needed
+            logger.info(f"Starting setup process for new user: {normalized_user_id}")
             await user_setup.start_setup(normalized_user_id, say)
             return
 
