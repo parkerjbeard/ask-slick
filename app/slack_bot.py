@@ -23,7 +23,7 @@ _slack_app = None
 
 class AsyncSlackRequestHandler(SlackRequestHandler):
     def __init__(self, app: AsyncApp):
-        # Initialize the base handler first
+        # Initialize the base handler
         self.app = app
         self.dispatcher = Dispatcher()
         self.logger = get_bolt_app_logger(app.name, AsyncSlackRequestHandler, app.logger)
@@ -38,6 +38,7 @@ class AsyncSlackRequestHandler(SlackRequestHandler):
 
         method = event.get("requestContext", {}).get("http", {}).get("method")
         if method is None:
+            # Possibly old API Gateway format
             method = event.get("requestContext", {}).get("httpMethod")
 
         if method is None:
@@ -114,7 +115,9 @@ def create_slack_bot(config_manager: ConfigManager):
     @_slack_app.event("message")
     async def handle_message_events(event, say):
         logger.debug(f"Received message event: {event}")
-        await process_message_event(event, say, dispatcher)
+        # Extract user ID from the event and normalize it
+        normalized_user_id = event.get('user')
+        await process_message_event(event, say, dispatcher, normalized_user_id)
 
     @_slack_app.error
     async def global_error_handler(error, body, logger):
@@ -142,7 +145,7 @@ async def process_message_event(event, say, dispatcher, normalized_user_id):
         # Check user setup status first
         user_setup = UserSetup()
         
-        # First check if user exists, if not register them
+        # If user hasn't completed setup, handle new-user flow
         setup_status = user_setup._check_existing_user(normalized_user_id)
         if not setup_status:
             logger.info(f"New user detected: {normalized_user_id}")
@@ -156,22 +159,22 @@ async def process_message_event(event, say, dispatcher, normalized_user_id):
             await user_setup.start_setup(normalized_user_id, say)
             return
 
-        # Continue with full assistant capabilities for set up users
+        # If user is all set up, continue with the full assistant
         dispatcher.set_user_context(normalized_user_id)
         
         # Check Google auth status first
         google_auth_manager = GoogleAuthManager()
-        credentials = google_auth_manager.get_credentials(normalized_user_id)
+        credentials = await google_auth_manager.get_credentials(normalized_user_id)
         
         if not credentials:
-            auth_url = google_auth_manager.get_auth_url()
+            auth_url = google_auth_manager.get_auth_url(normalized_user_id)
             await say(
                 blocks=[
                     {
                         "type": "section",
                         "text": {
                             "type": "mrkdwn",
-                            "text": "Before I can help you, I need access to your Google account."
+                            "text": "Before I can help you, I need access to your Google account. Click the button below to authenticate."
                         }
                     },
                     {
@@ -193,7 +196,7 @@ async def process_message_event(event, say, dispatcher, normalized_user_id):
             )
             return
 
-        # Continue with existing flow only if authenticated
+        # Now that we have credentials, generate a quick response
         openai_client = OpenAIClient()
         short_response = openai_client.generate_short_response(text)
         await say(text=short_response, channel=channel)
@@ -243,7 +246,8 @@ async def process_message_event(event, say, dispatcher, normalized_user_id):
         await say(text=f"I'm sorry, but I encountered an error while processing your request: {str(e)}\nPlease try again later.", channel=channel)
 
 async def send_slack_response(say, assistant_response, tool_responses, channel):
-    logger.debug(f"Sending Slack response - Channel: {channel}, Response: {assistant_response}")
+    logger.debug(f"[SLACK] Attempting to send message to channel: {channel}")
+    logger.debug(f"[SLACK] Bot token prefix: {settings.SLACK_BOT_TOKEN[:10] if settings.SLACK_BOT_TOKEN else 'None'}")
     
     slack_formatter = SlackMessageFormatter()
     
@@ -252,9 +256,11 @@ async def send_slack_response(say, assistant_response, tool_responses, channel):
         split_messages = slack_formatter.split_message(formatted_message)
         
         for message in split_messages:
+            logger.debug(f"[SLACK] Sending formatted message: {message}")
             await say(**message)
     except Exception as e:
-        logger.error(f"Error formatting and sending Slack message: {e}")
+        logger.error(f"[SLACK] Error sending message: {str(e)}")
+        logger.error(f"[SLACK] Full error context: {traceback.format_exc()}")
         # Fallback to plain text
         await say(text=assistant_response, channel=channel)
     

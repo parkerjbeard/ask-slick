@@ -10,6 +10,7 @@ class UserSetup:
     def __init__(self):
         self.dynamodb = boto3.resource('dynamodb')
         self.user_preferences_table = self.dynamodb.Table('user_preferences')
+        self.user_manifests_table = self.dynamodb.Table('user_manifests')
         self.google_auth_manager = google_auth_manager
         self.openai_client = OpenAIClient()
 
@@ -86,7 +87,7 @@ class UserSetup:
             credentials = await self.google_auth_manager.exchange_code(auth_code, state_token)
             logger.info("Authorization code exchanged successfully")
 
-            # Add debug logging
+            # Debug: token presence
             logger.debug(f"Credentials obtained - Token: {bool(credentials.token)}, Refresh Token: {bool(credentials.refresh_token)}")
 
             # Save credentials
@@ -129,9 +130,8 @@ class UserSetup:
             return {"status": "error", "message": "Google authentication required"}
 
         try:
-            # Validate timezone
+            # Validate timezone. If needed, integrate a full list of valid tz strings or pytz.
             if timezone_str not in datetime.tzinfo.__subclasses__():
-                # Alternative validation can be implemented if pytz is removed
                 await say(text="Invalid timezone. Please choose a standard timezone (e.g., 'America/New_York').")
                 return {"status": "invalid_timezone"}
 
@@ -170,14 +170,11 @@ class UserSetup:
 
     def _check_existing_user(self, user_id: str) -> bool:
         """
-        Checks if user already exists and has completed setup
+        Checks if user already exists AND if they've completed setup
         """
         logger.info(f"Checking existing user in DynamoDB for user_id: {user_id}")
-
         try:
-            # Use slack_user_id as the key
             response = self.user_preferences_table.get_item(Key={'slack_user_id': user_id})
-
             if 'Item' in response:
                 setup_completed = response['Item'].get('setup_completed', False)
                 logger.debug(f"User {user_id} setup status: {setup_completed}")
@@ -195,7 +192,6 @@ class UserSetup:
         Saves user preferences to DynamoDB
         """
         try:
-            # Ensure slack_user_id is set correctly
             item = {
                 'slack_user_id': user_id,  # Primary key
                 **preferences,
@@ -203,22 +199,24 @@ class UserSetup:
             }
             self.user_preferences_table.put_item(Item=item)
             logger.info(f"User preferences saved for user_id: {user_id}")
-
         except Exception as e:
             logger.error(f"Error saving preferences for user {user_id}: {repr(e)}")
             raise
 
-    async def check_user_setup(self, user_id: str) -> Dict[str, Any]:
+    async def check_user_setup(self, user_id: str) -> bool:
         """
-        Checks the setup status for a user
+        Check if user has completed setup
         """
-        is_setup = self._check_existing_user(user_id)
-        logger.info(f"Setup status for user_id {user_id}: {is_setup}")
-
-        return {
-            "setup_completed": is_setup,
-            "user_id": user_id
-        }
+        try:
+            response = self.user_manifests_table.get_item(
+                Key={'slack_user_id': user_id}
+            )
+            if 'Item' in response:
+                return response['Item'].get('setup_completed', False)
+            return False
+        except Exception as e:
+            logger.error(f"Error checking user setup: {str(e)}")
+            return False
 
     async def wait_for_setup_completion(self, user_id: str, timeout: int = 300) -> bool:
         """
@@ -244,9 +242,8 @@ class UserSetup:
         logger.info(f"Registering new user with user_id: {user_id}")
 
         try:
-            # Initial user preferences with correct key name
             initial_preferences = {
-                'slack_user_id': user_id,  # Primary key
+                'slack_user_id': user_id,
                 'setup_completed': False,
                 'registration_date': datetime.now(timezone.utc).isoformat(),
                 'updated_at': datetime.now(timezone.utc).isoformat()
