@@ -32,7 +32,7 @@ class UserSetup:
         self.flow = self.google_auth_manager.create_auth_flow()
 
         # Generate auth URL
-        auth_url = self.google_auth_manager.get_auth_url()
+        auth_url = self.google_auth_manager.get_auth_url(user_id)
 
         logger.info("Google auth URL generated")
 
@@ -69,15 +69,21 @@ class UserSetup:
             "next_step": "google_auth"
         }
 
-    async def complete_google_auth(self, user_id: str, auth_code: str, say: Any) -> Dict[str, Any]:
+    async def complete_google_auth(self, user_id: str, auth_code: str, state_token: str) -> Dict[str, Any]:
         """
         Handles Google authentication completion
         """
         logger.info(f"Completing Google auth for user_id: {user_id}")
 
         try:
+            # Verify state token matches user
+            verified_user_id = await self.google_auth_manager.verify_state_token(state_token)
+            if not verified_user_id or verified_user_id != user_id:
+                logger.error(f"State token verification failed for user {user_id}")
+                return {"status": "error", "message": "Invalid state token"}
+
             # Exchange the authorization code for credentials
-            credentials = await self.google_auth_manager.exchange_code(auth_code)
+            credentials = await self.google_auth_manager.exchange_code(auth_code, state_token)
             logger.info("Authorization code exchanged successfully")
 
             # Add debug logging
@@ -87,36 +93,28 @@ class UserSetup:
             save_result = self.google_auth_manager.save_credentials(user_id, credentials)
             if not save_result:
                 logger.error("Failed to save Google credentials")
-                await say(text="❌ There was an error saving your Google credentials. Please try again.")
                 return {"status": "error", "message": "Failed to save credentials"}
 
             # Verify saved credentials
             saved_creds = await self.google_auth_manager.get_credentials(user_id)
             if not saved_creds:
                 logger.error("Failed to verify saved credentials")
-                await say(text="❌ There was an error verifying your Google credentials. Please try again.")
                 return {"status": "error", "message": "Failed to verify credentials"}
 
             logger.info("Google authentication completed successfully")
-            await say(blocks=[
-                {
-                    "type": "section",
-                    "text": {
-                        "type": "mrkdwn",
-                        "text": "✅ Google authentication successful! Now, let's set up your timezone."
-                    }
-                }
-            ])
 
             return {
                 "status": "google_auth_completed",
-                "next_step": "timezone_setup"
+                "next_step": "timezone_setup",
+                "message": "Google authentication successful! Now, let's set up your timezone."
             }
 
         except Exception as e:
             logger.error(f"Google authentication error for user {user_id}: {repr(e)}")
-            await say(text="❌ There was an unexpected error during Google authentication. Please try again.")
-            return {"status": "error", "message": str(e)}
+            return {
+                "status": "error", 
+                "message": "There was an unexpected error during Google authentication. Please try again."
+            }
 
     async def complete_timezone_setup(self, user_id: str, timezone_str: str, say: Any) -> Dict[str, Any]:
         """

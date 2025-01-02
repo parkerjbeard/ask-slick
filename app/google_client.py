@@ -5,7 +5,7 @@ from google_auth_oauthlib.flow import Flow
 from app.config.settings import settings
 from typing import List, Optional, Dict
 from utils.user_id import UserIDManager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from utils.logger import logger
 import boto3
 import json
@@ -19,6 +19,7 @@ class GoogleAuthManager:
         self.kms_key_id = settings.KMS_KEY_ID
         self.dynamodb = boto3.resource('dynamodb')
         self.table = self.dynamodb.Table('user_manifests')
+        self.state_table = self.dynamodb.Table('oauth_states')
         self.scopes: List[str] = []
         self.credentials_store: Dict[str, Dict[str, object]] = {}
 
@@ -58,8 +59,10 @@ class GoogleAuthManager:
         flow = Flow.from_client_config(
             client_config,
             scopes=self.scopes,
-            redirect_uri=settings.GOOGLE_REDIRECT_URI
+
         )
+
+        flow.redirect_uri = settings.GOOGLE_REDIRECT_URI
 
         auth_url, _ = flow.authorization_url(
             access_type='offline',
@@ -69,23 +72,28 @@ class GoogleAuthManager:
 
         return flow
 
-    async def exchange_code(self, code: str) -> Credentials:
+    async def exchange_code(self, code: str, state: str) -> Credentials:
         """Exchange authorization code for credentials"""
         try:
             flow = self.create_auth_flow()
+            flow.state = state
+
+            # Add debug logging for OAuth parameters
+            logger.debug(f"OAuth Exchange Parameters:")
+            logger.debug(f"Redirect URI: {settings.GOOGLE_REDIRECT_URI}")
+            logger.debug(f"State Token: {state}")
+            logger.debug(f"Scopes: {self.scopes}")
 
             if 'openid' not in self.scopes:
                 self.add_scope('openid')
 
-            flow.fetch_token(
-                code=code,
-                client_secret=settings.GOOGLE_CLIENT_SECRET
-            )
-
+            flow.fetch_token(code=code)
             return flow.credentials
 
         except Exception as e:
             logger.error(f"Error exchanging code: {repr(e)}")
+            # Add error context logging
+            logger.error(f"Failed OAuth parameters - Redirect URI: {settings.GOOGLE_REDIRECT_URI}, State: {state}, Scopes: {self.scopes}")
             if hasattr(e, 'token'):
                 scopes = e.token.get('scope', '').split()
                 return Credentials(
@@ -198,19 +206,62 @@ class GoogleAuthManager:
 
         return user_services[service_key]
 
-    def get_auth_url(self) -> str:
-        """Get the authorization URL for Google OAuth"""
+    def get_auth_url(self, user_id: str) -> str:
+        """Get the authorization URL for Google OAuth with user tracking"""
         flow = self.create_auth_flow()
+        state_token = self._generate_state_token()
+        
+        # Store state token with user ID
+        self.state_table.put_item(Item={
+            'state_token': state_token,
+            'user_id': user_id,
+            'created_at': datetime.now(timezone.utc).isoformat(),
+            'expires_at': (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()
+        })
+        
         auth_url, _ = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true',
-            prompt='consent'
+            prompt='consent',
+            state=state_token  # Include state token in URL
         )
         return auth_url
+
+    async def verify_state_token(self, state_token: str) -> Optional[str]:
+        """Verify state token and return associated user_id"""
+        try:
+            response = self.state_table.get_item(Key={'state_token': state_token})
+            if 'Item' not in response:
+                logger.error(f"No state token found: {state_token}")
+                return None
+                
+            item = response['Item']
+            expires_at = datetime.fromisoformat(item['expires_at'])
+            
+            if datetime.now(timezone.utc) > expires_at:
+                logger.error(f"State token expired: {state_token}")
+                return None
+                
+            # Clean up used token
+            self.state_table.delete_item(Key={'state_token': state_token})
+            return item['user_id']
+            
+        except Exception as e:
+            logger.error(f"Error verifying state token: {repr(e)}")
+            return None
 
     def get_scopes(self) -> List[str]:
         """Get the currently configured scopes"""
         return self.scopes.copy()
+
+    async def process_oauth_callback(self, auth_code: str, user_id: str, state: str) -> bool:
+        """Process OAuth callback and save credentials"""
+        try:
+            credentials = await self.exchange_code(auth_code, state)
+            return self.save_credentials(user_id, credentials)
+        except Exception as e:
+            logger.error(f"Error processing OAuth callback: {repr(e)}")
+            return False
 
 # Create a global instance
 google_auth_manager = GoogleAuthManager()
