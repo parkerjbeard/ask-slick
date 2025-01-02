@@ -11,16 +11,23 @@ class OAuthHandler:
         self.user_setup = UserSetup()
     
     async def handle_oauth_callback(self, event: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        This is an async handler (AWS Lambda/HTTP). However, the calls to
+        google_auth_manager are now synchronous for verify_state_token() and exchange_code().
+        We'll just call them directly without 'await'.
+        """
         try:
             query_params = event.get('queryStringParameters', {})
             code = query_params.get('code')
             state = query_params.get('state')
 
-            verified_user_id = await google_auth_manager.verify_state_token(state)
+            # verify_state_token is now synchronous
+            verified_user_id = google_auth_manager.verify_state_token(state)
             if not verified_user_id:
                 return create_error_response("Invalid or expired state token")
 
-            credentials = await google_auth_manager.exchange_code(code, state)
+            # exchange_code is now synchronous
+            credentials = google_auth_manager.exchange_code(code, state)
             logger.info("Successfully exchanged code for credentials")
 
             save_result = google_auth_manager.save_credentials(verified_user_id, credentials)
@@ -38,7 +45,6 @@ class OAuthHandler:
                 logger.error(f"Failed to finalize user setup: {e}")
 
             # Attempt to send the success message to Slack:
-            # We must open a DM channel first and then post the message.
             try:
                 client = AsyncWebClient(token=os.environ["SLACK_BOT_TOKEN"])
                 

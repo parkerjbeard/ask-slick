@@ -11,8 +11,6 @@ from slack_bolt.adapter.aws_lambda import SlackRequestHandler
 from app.google_client import GoogleAuthManager
 from app.user_setup import UserSetup
 from slack_bolt.adapter.aws_lambda.handler import SlackRequestHandler
-
-from slack_bolt.adapter.aws_lambda.handler import SlackRequestHandler
 from slack_bolt.adapter.aws_lambda.lazy_listener_runner import LambdaLazyListenerRunner
 from slack_bolt.adapter.aws_lambda.handler import to_bolt_request, to_aws_response, not_found
 from slack_bolt.logger import get_bolt_app_logger
@@ -162,10 +160,10 @@ async def process_message_event(event, say, dispatcher, normalized_user_id):
         # If user is all set up, continue with the full assistant
         dispatcher.set_user_context(normalized_user_id)
         
-        # Check Google auth status first
+        # Check Google auth status (get_credentials is now synchronous)
         google_auth_manager = GoogleAuthManager()
-        credentials = await google_auth_manager.get_credentials(normalized_user_id)
-        
+        credentials = google_auth_manager.get_credentials(normalized_user_id)
+
         if not credentials:
             auth_url = google_auth_manager.get_auth_url(normalized_user_id)
             await say(

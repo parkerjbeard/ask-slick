@@ -59,7 +59,6 @@ class GoogleAuthManager:
         flow = Flow.from_client_config(
             client_config,
             scopes=self.scopes,
-
         )
 
         flow.redirect_uri = settings.GOOGLE_REDIRECT_URI
@@ -72,8 +71,8 @@ class GoogleAuthManager:
 
         return flow
 
-    async def exchange_code(self, code: str, state: str) -> Credentials:
-        """Exchange authorization code for credentials"""
+    def exchange_code(self, code: str, state: str) -> Credentials:
+        """Exchange authorization code for credentials (synchronous now)"""
         try:
             flow = self.create_auth_flow()
             flow.state = state
@@ -142,8 +141,11 @@ class GoogleAuthManager:
             logger.error(f"Error saving credentials: {type(e).__name__}({str(e)})")
             return False
 
-    async def get_credentials(self, user_id: str) -> Optional[Credentials]:
-        """Get credentials for a specific user"""
+    def get_credentials(self, user_id: str) -> Optional[Credentials]:
+        """
+        Get credentials for a specific user (synchronous now).
+        This no longer returns a coroutine but actual credentials or None.
+        """
         try:
             normalized_user_id = UserIDManager.normalize_user_id(user_id)
             response = self.table.get_item(Key={'user_id': normalized_user_id})
@@ -181,7 +183,7 @@ class GoogleAuthManager:
                 encrypted_data = encrypted_data_b64.value
             else:
                 encrypted_data = base64.b64decode(encrypted_data_b64)
-                
+
             decrypted_response = self.kms_client.decrypt(
                 CiphertextBlob=encrypted_data
             )
@@ -192,11 +194,12 @@ class GoogleAuthManager:
             raise
 
     def get_service(self, user_id: str, api_name: str, api_version: str):
-        """Get a Google service client for a specific user"""
+        """Get a Google service client for a specific user (synchronous)"""
         service_key = f"{api_name}_{api_version}"
         user_services = self.credentials_store.setdefault(user_id, {})
 
         if service_key not in user_services:
+            # get_credentials is now synchronous
             credentials = self.get_credentials(user_id)
             if not credentials:
                 raise Exception(f"No valid credentials for user {user_id}")
@@ -210,7 +213,7 @@ class GoogleAuthManager:
         """Get the authorization URL for Google OAuth with user tracking"""
         flow = self.create_auth_flow()
         state_token = self._generate_state_token()
-        
+
         # Store state token with user ID
         self.state_table.put_item(Item={
             'state_token': state_token,
@@ -218,7 +221,7 @@ class GoogleAuthManager:
             'created_at': datetime.now(timezone.utc).isoformat(),
             'expires_at': (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()
         })
-        
+
         auth_url, _ = flow.authorization_url(
             access_type='offline',
             include_granted_scopes='true',
@@ -227,25 +230,25 @@ class GoogleAuthManager:
         )
         return auth_url
 
-    async def verify_state_token(self, state_token: str) -> Optional[str]:
-        """Verify state token and return associated user_id"""
+    def verify_state_token(self, state_token: str) -> Optional[str]:
+        """Verify state token (synchronous now) and return associated user_id"""
         try:
             response = self.state_table.get_item(Key={'state_token': state_token})
             if 'Item' not in response:
                 logger.error(f"No state token found: {state_token}")
                 return None
-                
+
             item = response['Item']
             expires_at = datetime.fromisoformat(item['expires_at'])
-            
+
             if datetime.now(timezone.utc) > expires_at:
                 logger.error(f"State token expired: {state_token}")
                 return None
-                
+
             # Clean up used token
             self.state_table.delete_item(Key={'state_token': state_token})
             return item['user_id']
-            
+
         except Exception as e:
             logger.error(f"Error verifying state token: {repr(e)}")
             return None
@@ -254,14 +257,17 @@ class GoogleAuthManager:
         """Get the currently configured scopes"""
         return self.scopes.copy()
 
-    async def process_oauth_callback(self, auth_code: str, user_id: str, state: str) -> bool:
-        """Process OAuth callback and save credentials"""
+    def process_oauth_callback(self, auth_code: str, user_id: str, state: str) -> bool:
+        """
+        Process OAuth callback synchronously and save credentials.
+        """
         try:
-            credentials = await self.exchange_code(auth_code, state)
+            credentials = self.exchange_code(auth_code, state)
             return self.save_credentials(user_id, credentials)
         except Exception as e:
             logger.error(f"Error processing OAuth callback: {repr(e)}")
             return False
+
 
 # Create a global instance
 google_auth_manager = GoogleAuthManager()
