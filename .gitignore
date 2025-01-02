@@ -24,3 +24,6 @@ __pycache__/
 .DS_Store
 venv/
 .venv/
+deployment/package/
+deployment.zip
+build_lambda.sh
