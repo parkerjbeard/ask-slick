@@ -7,7 +7,7 @@ client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 class OpenAIClient:
     def __init__(self):
-        self.model = "gpt-4o-2024-08-06"
+        self.model = "chatgpt-4o-latest"
 
     def _create_chat_completion(self, messages: List[Dict[str, str]]) -> Dict[str, Any]:
         response = client.chat.completions.create(model=self.model, messages=messages)
