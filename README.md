@@ -67,8 +67,8 @@ Ready to supercharge your productivity? Follow these steps to deploy the AI Pers
 
 1. Clone the repository:
    ```
-   git clone https://github.com/parkerjbeard/BeardoGPT.git
-   cd BeardoGPT
+   git clone https://github.com/parkerjbeard/ask-slick.git
+   cd ask-slick
    ```
 
 2. Install dependencies:
