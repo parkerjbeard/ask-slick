@@ -32,6 +32,12 @@ class TestDocumentSearcher(unittest.TestCase):
         expected_similarity = 0.5  # Calculated manually
         self.assertAlmostEqual(similarity, expected_similarity, places=5)
 
+    def test_cosine_similarity_with_zero_vector(self):
+        vec1 = [0, 0, 0]
+        vec2 = [1, 1, 1]
+        similarity = self.document_searcher._cosine_similarity(vec1, vec2)
+        self.assertEqual(similarity, 0.0)
+
     def test_search_documents(self):
         query = "AI and machine learning"
         self.embedding_manager.generate_embedding.side_effect = lambda content: [1.0] * len(content.split())
