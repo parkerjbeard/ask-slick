@@ -27,7 +27,14 @@ class DocumentSearcher:
         """
         vec1 = np.array(vec1)
         vec2 = np.array(vec2)
-        return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
+
+        norm1 = np.linalg.norm(vec1)
+        norm2 = np.linalg.norm(vec2)
+
+        if norm1 == 0 or norm2 == 0:
+            return 0.0
+
+        return float(np.dot(vec1, vec2) / (norm1 * norm2))
 
     def search_documents(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """

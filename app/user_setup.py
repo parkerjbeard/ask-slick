@@ -4,6 +4,7 @@ from utils.logger import logger
 from typing import Dict, Any
 import boto3
 from datetime import datetime, timezone
+import pytz
 import asyncio
 
 class UserSetup:
@@ -130,8 +131,8 @@ class UserSetup:
             return {"status": "error", "message": "Google authentication required"}
 
         try:
-            # Validate timezone. If needed, integrate a full list of valid tz strings or pytz.
-            if timezone_str not in datetime.tzinfo.__subclasses__():
+            # Validate timezone using pytz's list of all timezones
+            if timezone_str not in pytz.all_timezones:
                 await say(text="Invalid timezone. Please choose a standard timezone (e.g., 'America/New_York').")
                 return {"status": "invalid_timezone"}
 
